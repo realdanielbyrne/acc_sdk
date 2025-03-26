@@ -71,9 +71,7 @@ pip install acc_sdk
 poetry install
 ```
 
-## Usage
-
-### Authentication
+## Authentication
 
 To use the ACC API, you need to create an instance of the `ACC` class. The `ACC` class provides access to the various
 services provided by the ACC API.  However, first you need to authenticate with the ACC API. 
@@ -214,7 +212,7 @@ if __name__ == "__main__":
 ```
 
 
-### Initialization
+## Initialization
 
 Once you have authenticated with the ACC API, you can create an instance of the `ACC` class. The `ACC` class provides access to the various services provided by the ACC API. 
 The account id is an optional argument. If you do not provide the account id, the class will attempt to get the Account Id from the 2-legged token.  Not providing the account
