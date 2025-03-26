@@ -67,7 +67,7 @@ The following services are planned for future implementation:
 ## Installation
 
 ```bash
-pip install accapi
+pip install acc_sdk
 poetry install
 ```
 
