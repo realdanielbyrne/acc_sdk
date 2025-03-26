@@ -181,3 +181,5 @@ credentials.json
 .aider.input.history
 config.py
 *.DS_Store
+*.vscode/
+*.idea/
