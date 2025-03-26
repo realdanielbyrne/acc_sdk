@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project Dashboard</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Table CSS (latest version supporting Bootstrap 5) -->
+  <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.21.1/dist/bootstrap-table.min.css">
+</head>
+<body>
+  <div class="container my-4">
+    <h1>Project Dashboard</h1>
+    <!-- Bootstrap Table displaying projects -->
+    <table id="projectTable"
+           data-toggle="table"
+           data-search="true"
+           data-pagination="true"
+           class="table table-striped">
+      <thead>
+        <tr>
+          <th data-field="jobNumber">Job Number</th>
+          <th data-field="name">Name</th>
+          <th data-field="type">Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for project in projects %}
+          <tr data-id="{{ project.id }}">
+            <td>{{ project.jobNumber }}</td>
+            <td>{{ project.name }}</td>
+            <td>{{ project.type }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Forms Table Section -->
+    <div id="formsSection" class="mt-4" style="display: none;">
+      <h3>Forms</h3>
+      <table id="formsTable"
+             data-toggle="table"
+             data-search="true"
+             data-pagination="true"
+             class="table table-striped">
+        <thead>
+          <tr>
+            <th data-field="name">Name</th>                        
+            <th data-field="formDate">Form Date</th>
+            <th data-field="status">Status</th>
+            <th data-field="createdByName">Created By</th>
+            <th data-field="createdByEmail">Created By E-mail</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/bootstrap-table@1.21.1/dist/bootstrap-table.min.js"></script>
+
+  <script>
+    $(function() {
+      // Initialize the bootstrap tables
+      $('#projectTable').bootstrapTable();
+      $('#formsTable').bootstrapTable();
+
+      // Attach event listener for row click on project table
+      $('#projectTable').on('click-row.bs.table', function (e, row, $element) {
+        // Retrieve the project id from the clicked row
+        var projectId = $element.data('id');
+        console.log("Selected project id:", projectId);
+
+        // POST the project id to the /get_project_data route
+        $.post("/get_project_data", { project_id: projectId }, function(data) {
+          console.log("Project data received:", data);
+
+          if (data.forms && data.forms.length > 0) {
+            // Load the forms data into the bootstrap table
+            $('#formsTable').bootstrapTable('load', data.forms);
+            $('#formsSection').show();
+          } else {
+            $('#formsSection').hide();
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

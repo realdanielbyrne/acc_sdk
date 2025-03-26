@@ -1,0 +1,34 @@
+[project]
+name = "acc_sdk"
+description = "An Unofficial Python Implementation of the Autodesk Construction Cloud API SDK"
+license = { text = "MIT" }
+authors = [{name="Daniel Byrne", email= "realdanielbyrne@icloud.com"}]
+maintainers = [{name="Daniel Byrne", email= "realdanielbyrne@icloud.com"}]
+readme = "README.md"
+requires-python = ">= 3.12"
+
+[project.urls]
+repository = "https://github.com/realdanielbyrne/acc_sdk"
+
+[tool.poetry]
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+requests = "^2.32.3"
+flask = "^3.1.0"
+argparse = "^1.4.0"
+ipython = "^9.0.1"
+python-dotenv = "^1.0.1"
+[tool.poetry.group.test.dependencies]
+pytest = "^8.3.5"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+dashboard = "tests.flask_app:run"
