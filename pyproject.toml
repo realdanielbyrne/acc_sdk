@@ -33,4 +33,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-dashboard = "tests.flask_app:run"
+dashboard = "tests.test_3legged:run"

@@ -732,6 +732,244 @@ The response includes details such as:
 - Picture URL
 - Other OpenID Connect standard claims
 
+### Using the Business Units API
+
+The `AccBusinessUnitsApi` class provides methods to manage business units within your Autodesk Construction Cloud (ACC) account. 
+This API requires a 2-legged token with the `account:read` and `account:write` scopes.
+
+#### Get All Business Units
+
+Retrieve all business units in your account.
+
+```python
+business_units = acc.business_units.get_business_units()
+print(business_units)
+```
+
+#### Get Business Unit by ID
+
+Fetch details of a specific business unit using its ID.
+
+```python
+business_unit = acc.business_units.get_business_unit(business_unit_id="your_business_unit_id")
+print(business_unit)
+```
+
+#### Create a Business Unit
+
+Create a new business unit in your account.
+
+```python
+new_business_unit = {
+    "name": "New Business Unit",
+    "description": "Description of the business unit"
+}
+created_unit = acc.business_units.post_business_unit(new_business_unit)
+print(created_unit)
+```
+
+#### Update a Business Unit
+
+Modify an existing business unit's details.
+
+```python
+update_data = {
+    "name": "Updated Business Unit Name",
+    "description": "Updated description"
+}
+updated_unit = acc.business_units.patch_business_unit(
+    business_unit_id="your_business_unit_id",
+    data=update_data
+)
+print(updated_unit)
+```
+
+### Using the Companies API
+
+The `AccCompaniesApi` class provides methods to manage companies within your Autodesk Construction Cloud (ACC) account. 
+This API requires a 2-legged token with the `account:read` scope for GET requests and `account:write` scope for POST and PATCH requests.
+
+#### Get All Companies
+
+Retrieve a list of companies in your account with optional filtering and pagination.
+
+```python
+# Get all companies with default pagination (20 items per page)
+companies = acc.companies.get_companies()
+
+# Get companies with custom filters
+filtered_companies = acc.companies.get_companies(
+    filter_name="Construction Co",
+    filter_trade="Concrete",
+    limit=50,
+    offset=0
+)
+```
+
+#### Get Company by ID
+
+Fetch details of a specific company using its ID.
+
+```python
+company = acc.companies.get_company(company_id="your_company_id")
+print(company)
+```
+
+#### Update Company Details
+
+Modify an existing company's information.
+
+```python
+update_data = {
+    "name": "Updated Company Name",
+    "trade": "Concrete",
+    "phone": "(503)623-1525"
+}
+updated_company = acc.companies.update_company(
+    account_id="your_account_id",
+    company_id="your_company_id",
+    data=update_data
+)
+print(updated_company)
+```
+
+#### Update Company Image
+
+Upload or update a company's logo or image.
+
+```python
+# Update company image with auto-detected MIME type
+updated_company = acc.companies.update_company_image(
+    account_id="your_account_id",
+    company_id="your_company_id",
+    file_path="path/to/company_logo.png"
+)
+
+# Update company image with specific MIME type
+updated_company = acc.companies.update_company_image(
+    account_id="your_account_id",
+    company_id="your_company_id",
+    file_path="path/to/company_logo.png",
+    mime_type="image/png"
+)
+```
+
+### Using the Authentication API
+
+The `Authentication` class provides comprehensive methods to manage authentication with the Autodesk Construction Cloud (ACC) API. It supports both 2-legged and 3-legged OAuth flows, token management, and various authentication-related operations.
+
+#### Initialize Authentication
+
+Create a new instance of the Authentication client with your credentials.
+
+```python
+auth_client = Authentication(
+    client_id="your_client_id",
+    client_secret="your_client_secret",
+    admin_email="admin@example.com",  # Optional, for 2-legged user impersonation
+    session={},  # Flask session or dictionary to store tokens
+    callback_url="http://your-app/callback",  # Required for 3-legged flow
+    logout_url="http://your-app/logout"  # Optional, for logout redirect
+)
+```
+
+#### 2-Legged Authentication
+
+Obtain a client credentials token for server-to-server operations.
+
+```python
+scopes = [
+    "data:read",
+    "data:write",
+    "account:read",
+    "account:write"
+]
+token = auth_client.request_2legged_token(scopes=scopes)
+```
+
+#### 3-Legged Authentication
+
+The 3-legged authentication process involves multiple steps:
+
+1. First, generate the authorization URL that the user will visit:
+```python
+# Define the scopes needed for your application
+scopes = [
+    "user-profile:read",
+    "data:read",
+    "data:write",
+    "account:read",
+    "account:write"
+]
+
+# Get the authorization URL
+auth_url = auth_client.get_authorization_url(scopes=scopes)
+```
+
+2. The user visits the authorization URL and authenticates with Autodesk. Upon successful authentication, Autodesk redirects the user to your callback URL with an authorization code.
+
+3. In your callback handler, exchange the authorization code for access and refresh tokens:
+```python
+# Exchange the authorization code for tokens
+token_data = auth_client.request_authcode_access_token(
+    code=request.args.get("code"),  # The code from the callback
+    scopes=scopes
+)
+```
+
+4. When the access token expires, use the refresh token to obtain a new access token:
+```python
+# Refresh the token with optional subset of scopes
+new_token = auth_client.request_private_refresh_token(
+    scopes=["data:read", "data:write"]  # Optional subset of original scopes
+)
+```
+
+For a complete example of implementing 3-legged authentication in a web application, see the Flask example in the Authentication section above.
+
+#### Token Management
+
+Manage and validate your authentication tokens.
+
+```python
+# Check if a token is valid
+is_valid = auth_client.is_authorized("accapi_3legged")
+
+# Get remaining time until token expiration
+expires_in = auth_client.expires_in("accapi_3legged")
+
+# Revoke a token
+auth_client.revoke_private_token("accapi_3legged")
+
+# Clear all tokens from session
+auth_client.clear_all_tokens()
+```
+
+#### User Profile Information
+
+Retrieve information about the authenticated user.
+
+```python
+# Get user profile information
+user_info = auth_client.get_user_info()
+print(user_info)
+```
+
+#### Token Types and Scopes
+
+The Authentication class supports various token types and scopes:
+
+- **2-Legged Tokens**: For server-to-server operations
+- **3-Legged Tokens**: For user-specific operations
+- **Public Tokens**: Without client secret (PKCE flow)
+- **Private Tokens**: With client secret
+
+Common scopes include:
+- `user-profile:read`: Access user profile information
+- `data:read` and `data:write`: Access project data
+- `account:read` and `account:write`: Manage account settings
+- `viewables:read`: Access viewable files
+
 ## Required Scopes and Token Types
 
 The scopes and token types needed by API:
