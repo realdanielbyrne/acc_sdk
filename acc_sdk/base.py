@@ -24,24 +24,41 @@ class AccBase:
         self.hub_id = "b."+self.account_id if self.account_id else None
         
         if self.account_id is None and self.get_private_token():                
-            self.hub_id, self.account_id = self.get_account_id()    
+            self.hub_id, self.account_id = self._get_account_id()    
             if not self.account_id:
                 print("Warning: Account ID is required for some API calls.")
             
         self.admin_email = auth_client.admin_email
         if self.admin_email and self.get_2leggedToken():
-            self.user_info = self.get_user_by_email(self.admin_email)
+            self.user_info = self._get_user_by_email(self.admin_email)
             self.company_id = self.user_info.get('company_id')
             self.account_id = self.user_info.get('account_id')
         
         if self.account_id and not self.company_id:
-            self.company_id = self.get_company_id()
+            self.company_id = self._get_company_id()
 
         # get token holder user info
         if self.get_3leggedToken():
             self.user_info = self.auth_client.get_user_info()
             
-    def get_user_by_email(self, email)->dict:
+
+    def get_2leggedToken(self):
+        """Look for a 2legged token in the auth_client._session dictionary
+
+        Returns:
+            str: Bearer token
+        """
+        return self.auth_client.get_2legged_token()
+        
+    def get_3leggedToken(self):
+        """Look for a 3legged token in the auth_client._session dictionary
+
+        Returns:
+            str: Bearer token
+        """
+        return self.auth_client.get_3legged_token()
+
+    def _get_user_by_email(self, email)->dict:
         """Get a user by email address.
 
         Args:
@@ -70,23 +87,7 @@ class AccBase:
         
         else:
             None
-
-    def get_2leggedToken(self):
-        """Look for a 2legged token in the auth_client._session dictionary
-
-        Returns:
-            str: Bearer token
-        """
-        return self.auth_client.get_2legged_token()
-        
-    def get_3leggedToken(self):
-        """Look for a 3legged token in the auth_client._session dictionary
-
-        Returns:
-            str: Bearer token
-        """
-        return self.auth_client.get_3legged_token()
-
+            
     def get_private_token(self):
         """
         Get the private token from the auth_client.
@@ -96,7 +97,7 @@ class AccBase:
         """
         return self.get_2leggedToken() if self.get_2leggedToken() else self.get_3leggedToken()
                     
-    def get_company_id(self):
+    def _get_company_id(self):
         """
         Get the company ID from the account ID.
 
@@ -131,7 +132,7 @@ class AccBase:
         else:
             return None
 
-    def get_account_id(self):
+    def _get_account_id(self):
         """Get the account ID from the hub ID.
 
         Returns:
