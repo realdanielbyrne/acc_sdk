@@ -1,53 +1,52 @@
-# AccSdk Autodesk Construction Cloud SOftware Devedlopment Kit
+# AccSdk - Autodesk Construction Cloud Software Development Kit
 
 [![PyPI version](https://badge.fury.io/py/acc_sdk.svg)](https://badge.fury.io/py/acc_sdk)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Introduction
 
-The Autodesk Construction Cloud SDK, AccSdk, is a software development kit for Python  that helps developers
+The Autodesk Construction Cloud SDK, AccSdk, is a software development kit for Python that helps developers
 create applications that leverage the [Autodesk Construction Cloud API](https://aps.autodesk.com/developer/overview/autodesk-construction-cloud).
 This SDK grew out of my company's need to automate certain aspects of ACC that are not currently supported by the
 [ACC web application](https://acc.autodesk.com/).
 
-Autodesk publishes and maintains an exensive collection of APIs that allow you to automate and integrate across all of their platforms
-products, ACC being one of their newer offerings.  The official documentation for the ACC API can be found at 
+Autodesk publishes and maintains an extensive collection of APIs that allow you to automate and integrate across all of their platform
+products, ACC being one of their newer offerings. The official documentation for the ACC API can be found at
 [Autodesk Construction Cloud API](https://aps.autodesk.com/developer/overview/autodesk-construction-cloud). This package
 also supports a subset of the [Data Management API](https://aps.autodesk.com/developer/overview/data-management-api),
-which provides access to the data stored in the ACC Files module.  Pleae refer to the original documentation for extensive details
-on the API endpoints and their usage. 
+which provides access to the data stored in the ACC Files module. Please refer to the original documentation for extensive details
+on the API endpoints and their usage.
 
-This package is not an official Autodesk product, but rather a community-driven effort to provide an alternative 
-interface to the ACC API.  Specifially, i've used this package to automate setting up hundreds of jobs and users in
-ACC when when the company I work for first adopted the platform.  We also use this package on an on going basis to automate adding 
-new hires and managing bulk user updates to large numbers of projects.  For instance when someone gets promoted we upgrade 
+This package is not an official Autodesk product, but rather a community-driven effort to provide an alternative
+interface to the ACC API. Specifically, I've used this package to automate setting up hundreds of jobs and users in
+ACC when the company I work for first adopted the platform. We also use this package on an ongoing basis to automate adding
+new hires and managing bulk user updates to large numbers of projects. For instance, when someone gets promoted, we upgrade
 their project level permissions and possibly add them to a larger subset of the overall projects. I've also used this package in an automation script
-that creates new projects in ACC as new projects get created in an adjacent ERP application. There are many more uses.  Feel free to contribute to the project
-by adding more services or features, and or sending me a message if you have any questions or suggestions for future enhancements.
+that creates new projects in ACC as new projects get created in an adjacent ERP application. There are many more uses. Feel free to contribute to the project
+by adding more services or features, and/or sending me a message if you have any questions or suggestions for future enhancements.
 
 ## Features
 
 Acc_sdk currently implements the following Autodesk Construction Cloud APIs:
 
-- The Accoount Users API allows you to add and update groups of users to your account.
-- The Authentication API provides methods to authenticate with the ACC using the OAuth2 2-legged  and/or the 3-legged flows.
- This class also maintains the validity of the Bearer tokens, by refreshing the tokens as they expire, and manages both 
+- The Account Users API allows you to add and update groups of users to your account.
+- The Authentication API provides methods to authenticate with the ACC using the OAuth2 2-legged and/or the 3-legged flows.
+ This class also maintains the validity of the Bearer tokens by refreshing the tokens as they expire, and manages both
  2-legged and 3-legged tokens at the same time to give you full access to the API services.
-- The Business Units API allows you to createe, update, or get business units in your account.
+- The Business Units API allows you to create, update, or get business units in your account.
 - The Companies API provides methods to manage companies, such as adding and updating companies.
 - The Data Management API allows you to manage files and folders in the project. You can upload, download, and
  delete files, create folders, and move files between folders. The API also provides access to the data stored
  in the ACC Data Management module.
 - The Forms API provides methods to securely create forms from a template, fill out, modify, and retrieve form data.
 - The Project Users API provides methods to manage project users, such as adding, updating, deleting, and patching permissions for users on a project.
-- The Projects API provides methods to create, read, update, and delete projects. 
-- The Sheets API provides methods to manage sheets and version sets, as well as uploading, publishing, and exporting sheets as pdfs.
-- The User Profile API provides a method for gathering profile information from the logged in user.
-
+- The Projects API provides methods to create, read, update, and delete projects.
+- The Sheets API provides methods to manage sheets and version sets, as well as uploading, publishing, and exporting sheets as PDFs.
+- The User Profile API provides a method for gathering profile information from the logged-in user.
 
 ## Contributing
 
-This project is a work in progress and will be updated with more services as the features are implemented. I am 
+This project is a work in progress and will be updated with more services as the features are implemented. I am
 working on adding more services to the `ACC` class, but you can also contribute to the project by helping me add
 more services.
 
@@ -60,23 +59,21 @@ To contribute to the project, please follow the steps below:
 5. Push your changes to your fork
 6. Create a pull request
 
-
 The following services are planned for future implementation:
 
-- The AutoSpecs API 
-- The Assets API 
-- The Cost Management API 
-- The Data Connector API 
+- The AutoSpecs API
+- The Assets API
+- The Cost Management API
+- The Data Connector API
 - The Files (Document Management) API
-- The Issues API 
-- The Model Coordination API 
-- The Locations API 
-- The Photos API 
-- The Relationships API 
-- The RFIs API (beta) 
-- The Submittals API 
-- The Takeoff API 
-
+- The Issues API
+- The Model Coordination API
+- The Locations API
+- The Photos API
+- The Relationships API
+- The RFIs API (beta)
+- The Submittals API
+- The Takeoff API
 
 ## Installation
 
@@ -85,20 +82,19 @@ pip install acc_sdk
 poetry install
 ```
 
-
 ## Usage
 
 ### Authentication
 
 The first step in using the AccSdk, you need to create an instance of the `ACC` class. The `ACC` class provides access to the various
-services provided by the ACC API.  However, first you need to authenticate with the ACC API. 
+services provided by the ACC API.  However, first you need to authenticate with the ACC API.
 
-The AccSdk Authentication module implements methods to use the the OAuth2 2-legged and 3-legged authentication processes, and it 
+The AccSdk Authentication module implements methods to use the the OAuth2 2-legged and 3-legged authentication processes, and it
 manages the tokens and their liftimes. The Authentication module class provides the necessary methods to
 
-- Authenticate with the ACC API using 
-    - 2 legged OAuth Client Credential flow 
-    - 3 legged OAuth Authorization Code flow 
+- Authenticate with the ACC API using
+  - 2 legged OAuth Client Credential flow
+  - 3 legged OAuth Authorization Code flow
 - Maintain the validity of tokens, by refreshing them as they expire
 - Manage both 2-legged and 3-legged tokens concurrently to give you full access to the API services
 - Revoke tokens
@@ -109,6 +105,7 @@ manages the tokens and their liftimes. The Authentication module class provides 
 - Get the APIs supported scopes
 
 The initialization of the `Authentication` class requires the following parameters:
+
 - `session`: A Flask session or a Python dictionary that is used to store the tokens and other session-related data.
 - `client_id`: The Client ID of your application. This is provided by Autodesk when you register your application.  
 - `client_secret`: The client secret of your application. This is also provided by Autodesk when you register your application. Optional if you are using PKCE.
@@ -229,7 +226,6 @@ if __name__ == "__main__":
 
 ```
 
-
 ### Initialization
 
 Once you have authenticated with the ACC API, you can create an instance of the `ACC` class. The `ACC` class provides access to the various services provided by the ACC API. The account id is an optional argument. If you do not provide the account id, the class will attempt to get the Account Id from the 2-legged token.  Not providing the account id will not limit the services you can access if you have both the 2-legged and 3-legged tokens and the appropriate scopes.
@@ -242,8 +238,6 @@ acc = Acc(auth_client=auth_client, account_id=ACCOUNT_ID)
 The account id is an optional argument. If you do not provide the account id, the class will attempt to get the Account Id from the 2-legged token.  Not providing the account
 id will not limit the APIs you can access. Best is to provide both 2-legged and 3-legged tokens in the Authentication class with and the appropriate scopes so that
 you can access all the APIs.
-
-
 
 ## Making API Requests
 
@@ -280,12 +274,13 @@ projects = acc.projects.get_projects()
 #### Get Limited Project Details
 
 Get Projects and limit the metadata fields returned.
+
 ```python
 projects = acc.projects.get_projects(filter_params={'fields':"accountId,name,jobNumber"})
 print(projects[0])
 ```
 
-#### Get Projects Filtered 
+#### Get Projects Filtered
 
 Here we show how to get active projects with a specific status, and limit the metadata fields returned.
 
@@ -303,7 +298,7 @@ projects = acc.projects.get_projects(filter_params=active_build_projects_params)
 Creates a new project. You can create the project directly,
 or clone it from a project template.
 
-The project dictionary needs at least name and type fields defined,l and the 
+The project dictionary needs at least name and type fields defined,l and the
 name must be unique even among deleted projects since they are not actually deleted.
 
 ```python
@@ -518,7 +513,6 @@ users_to_remove = [
 acc.project_users.delete_users(project_id="your_project_uuid", users=users_to_remove)
 ```
 
-
 ### Managing Forms
 
 The `AccFormsApi` provides methods to interact with forms within Autodesk Construction Cloud (ACC), allowing users to retrieve, create, and modify form data.
@@ -582,7 +576,7 @@ print(updated_fields)
 
 ### Using the Sheets API
 
-The `AccSheetsApi` class provides methods to manage sheets, version sets, uploads, exports, and collections within Autodesk Construction Cloud (ACC). 
+The `AccSheetsApi` class provides methods to manage sheets, version sets, uploads, exports, and collections within Autodesk Construction Cloud (ACC).
 Ensure your `Authentication` instance has a 3-legged token with scopes `data:read` and `data:write` to use these methods.
 
 Below are the main functionalities, along with usage examples:
@@ -712,7 +706,7 @@ collection = acc.sheets.get_collection(
 
 ### Using the User Profile API
 
-The `AccUserProfileApi` class provides methods to retrieve information about the authenticated user in Autodesk Construction Cloud (ACC). 
+The `AccUserProfileApi` class provides methods to retrieve information about the authenticated user in Autodesk Construction Cloud (ACC).
 This API requires a 3-legged token with the `user-profile:read` scope.
 
 #### Get User Information
@@ -725,6 +719,7 @@ print(user_info)
 ```
 
 The response includes details such as:
+
 - User ID
 - Email address
 - Name
@@ -734,7 +729,7 @@ The response includes details such as:
 
 ### Using the Business Units API
 
-The `AccBusinessUnitsApi` class provides methods to manage business units within your Autodesk Construction Cloud (ACC) account. 
+The `AccBusinessUnitsApi` class provides methods to manage business units within your Autodesk Construction Cloud (ACC) account.
 This API requires a 2-legged token with the `account:read` and `account:write` scopes.
 
 #### Get All Business Units
@@ -786,7 +781,7 @@ print(updated_unit)
 
 ### Using the Companies API
 
-The `AccCompaniesApi` class provides methods to manage companies within your Autodesk Construction Cloud (ACC) account. 
+The `AccCompaniesApi` class provides methods to manage companies within your Autodesk Construction Cloud (ACC) account.
 This API requires a 2-legged token with the `account:read` scope for GET requests and `account:write` scope for POST and PATCH requests.
 
 #### Get All Companies
@@ -892,6 +887,7 @@ token = auth_client.request_2legged_token(scopes=scopes)
 The 3-legged authentication process involves multiple steps:
 
 1. First, generate the authorization URL that the user will visit:
+
 ```python
 # Define the scopes needed for your application
 scopes = [
@@ -909,6 +905,7 @@ auth_url = auth_client.get_authorization_url(scopes=scopes)
 2. The user visits the authorization URL and authenticates with Autodesk. Upon successful authentication, Autodesk redirects the user to your callback URL with an authorization code.
 
 3. In your callback handler, exchange the authorization code for access and refresh tokens:
+
 ```python
 # Exchange the authorization code for tokens
 token_data = auth_client.request_authcode_access_token(
@@ -918,6 +915,7 @@ token_data = auth_client.request_authcode_access_token(
 ```
 
 4. When the access token expires, use the refresh token to obtain a new access token:
+
 ```python
 # Refresh the token with optional subset of scopes
 new_token = auth_client.request_private_refresh_token(
@@ -965,6 +963,7 @@ The Authentication class supports various token types and scopes:
 - **Private Tokens**: With client secret
 
 Common scopes include:
+
 - `user-profile:read`: Access user profile information
 - `data:read` and `data:write`: Access project data
 - `account:read` and `account:write`: Manage account settings
@@ -975,31 +974,58 @@ Common scopes include:
 The scopes and token types needed by API:
 
 - AccProjectUsersApi
-    - Requires the `data:read` scope for GET and `data:write` scope for POST and PATCH
-    - Requires either a 2-legged or 3-legged token
+  - Requires the `data:read` scope for GET and `data:write` scope for POST and PATCH
+  - Requires either a 2-legged or 3-legged token
 - AccProjectsApi
-    - Requires the `account:read` scope for GET and `account:write` scope for POST and PATCH
-    - Requires either a 2-legged or 3-legged token
+  - Requires the `account:read` scope for GET and `account:write` scope for POST and PATCH
+  - Requires either a 2-legged or 3-legged token
 - AccSheetsApi
-    - Requires the `data:read` and `data:write` scopes
-    - Requires a 3-legged token
+  - Requires the `data:read` and `data:write` scopes
+  - Requires a 3-legged token
 - AccDataManagementApi
-    - Requires the `data:read` and `data:write` scopes
+  - Requires the `data:read` and `data:write` scopes
 - AccBusinessUnitsApi
-    - Requires the `account:read` and `account:write` scopes
-    - Requires either a 2-legged token
-- AccCompaniesApi 
-    - Requires the `account:read` and `account:write` scopes
-    - Requires a 2-legged token for POST and PATCH requests, and a 2 or 3-legged token for GET requests.
-- AccFormsApi 
-    - Requires the `data:read` and `data:write` scopes and a 3-legged token
-    - Requires a 3-legged token
+  - Requires the `account:read` and `account:write` scopes
+  - Requires a 2-legged token
+- AccCompaniesApi
+  - Requires the `account:read` and `account:write` scopes
+  - Requires a 2-legged token for POST and PATCH requests, and a 2 or 3-legged token for GET requests
+- AccFormsApi
+  - Requires the `data:read` and `data:write` scopes
+  - Requires a 3-legged token
 - AccAccountUsersApi
-    - Requires the `account:read` and `account:write` scopes
+  - Requires the `account:read` and `account:write` scopes
 - AccSheetsApi
-    - Requires the `data:read` and `data:write` scopes
-    - Requires a 3-legged token
+  - Requires the `data:read` and `data:write` scopes
+  - Requires a 3-legged token
 - AccUserProfileApi
-    - Requires the `user-profile:read` scope
-    - Requires a 3-legged token
+  - Requires the `user-profile:read` scope
+  - Requires a 3-legged token
 
+## License
+
+This project is licensed under the MIT License - see below for details:
+
+```
+MIT License
+
+Copyright (c) 2024 Daniel Byrne
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
