@@ -20,36 +20,49 @@ class ResponseType(Enum):
 class Authentication:
 
     def __init__(self, 
-                 session, 
                  client_id:str, 
-                 client_secret:str, 
+                 client_secret:str="", 
                  admin_email:str="",
+                 session = {}, 
                  callback_url:str="",
                  logout_url:str=""
                  ):
         """Create a new instance of the Authentication client.
 
-        ACCAPI Authentication Client using Oauth2.0 which retrieves,
-        stores, and refreshes 2 legged client credential flow and 
-        3 legged authorization code flow bearer tokens and maintains their
-        state in a session or dictionary object, refreshing the tokens as
-        necessary.
-        
+
+        The AccSdk Authentication module implements methods to use the the OAuth2 2-legged and 3-legged authentication processes, and it 
+        manages the tokens and their liftimes. The Authentication module class provides the necessary methods to
+
+        - Authenticate with the ACC API using 
+            - 2 legged OAuth Client Credential flow 
+            - 3 legged OAuth Authorization Code flow 
+        - Maintain the validity of tokens, by refreshing them as they expire
+        - Manage both 2-legged and 3-legged tokens concurrently to give you full access to the API services
+        - Revoke tokens
+        - Introspect tokens to check their validity
+        - Logout of the 3-legged session
+        - Get the user profile of the 3-legged token holder
+        - Get the OpenID Connect Discovery Document
+        - Get the APIs supported scopes
+    
+
         Args:
-            session (_type_): 
+            session (dict): 
                 Session objest where tokens are stored. Can be a Flask session
                 or a Python dictionary or similar.
             client_id (str): 
                 APS Client Id
             client_secret (str): 
                 APS Client Secret            
+            session (dict): 
+                Session object where tokens are stored. Can be a Flask session
+                or a Python dictionary or similar.
             callback_url (str): 
                 The URL to redirect the user to after 3 legged authorization
             logout_url (str): 
                 The URL to redirect the user to after logging out.
             admin_email (str):
-                The email of the admin user for 2-legged user impersonation.
-          
+                The email of the admin user for 2-legged user impersonation.          
         """
 
         # Session is something like a Flask session or dictionary

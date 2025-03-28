@@ -1,35 +1,49 @@
-# Autodesk Construction Cloud SDK
+# AccSdk Autodesk Construction Cloud SOftware Devedlopment Kit
+
+[![PyPI version](https://badge.fury.io/py/acc_sdk.svg)](https://badge.fury.io/py/acc_sdk)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Introduction
-The Autodesk Construction Cloud, ACC, API for Python helps developers create applications that leverage
-ACC API. This API grew out of my company's need to automate certain aspects of ACC that are not currently
-supported by the ACC web application. The API is a work in progress and will be updated with more services
-as the features are implemented. I am working on adding more services to the `ACC` class, but you can also
-contribute to the project by adding more services.
 
-I've currently implemented the following APIs:
+The Autodesk Construction Cloud SDK, AccSdk, is a software development kit for Python  that helps developers
+create applications that leverage the [Autodesk Construction Cloud API](https://aps.autodesk.com/developer/overview/autodesk-construction-cloud).
+This SDK grew out of my company's need to automate certain aspects of ACC that are not currently supported by the
+[ACC web application](https://acc.autodesk.com/).
 
-- The Account Admin API automates creating and managing projects, assigning and managing project users, and managing 
- member and partner company directories with teh following APIs:
+Autodesk publishes and maintains an exensive collection of APIs that allow you to automate and integrate across all of their platforms
+products, ACC being one of their newer offerings.  The official documentation for the ACC API can be found at 
+[Autodesk Construction Cloud API](https://aps.autodesk.com/developer/overview/autodesk-construction-cloud). This package
+also supports a subset of the [Data Management API](https://aps.autodesk.com/developer/overview/data-management-api),
+which provides access to the data stored in the ACC Files module.  Pleae refer to the original documentation for extensive details
+on the API endpoints and their usage. 
 
-    - The Projects API provides methods to create, read, update, and delete projects. 
-    - The Accoount Users API allows you to add and update groups of users to your account.
-    - The Business Units API allows you to createe, update, or get business units in your account.
-    - The Companies API provides methods to manage companies, such as adding and updating companies.
-    - The Project Users API provides methods to manage project users, such as adding, updating, deleting, and patching permissions for users on a project.
+This package is not an official Autodesk product, but rather a community-driven effort to provide an alternative 
+interface to the ACC API.  Specifially, i've used this package to automate setting up hundreds of jobs and users in
+ACC when when the company I work for first adopted the platform.  We also use this package on an on going basis to automate adding 
+new hires and managing bulk user updates to large numbers of projects.  For instance when someone gets promoted we upgrade 
+their project level permissions and possibly add them to a larger subset of the overall projects. I've also used this package in an automation script
+that creates new projects in ACC as new projects get created in an adjacent ERP application. There are many more uses.  Feel free to contribute to the project
+by adding more services or features, and or sending me a message if you have any questions or suggestions for future enhancements.
 
-- The Forms API provides methods to securely create forms from a template, fill out, modify, and retrieve form data.
-- The Sheets API provides methods to manage sheets and version sets, as well as uploading, publishing, and exporting sheets as pdfs.
-- The Authentication helper class provides methods to authenticate with the ACC using the OAuth2 2-legged 
- client credential flow and/or the 3-legged authorization code flows. This class also maintains
- the validity of the Bearer tokens, by refreshing the tokens as they expire, and manages both 2-legged and 
- 3-legged tokens at the same time to give you full access to the API services.
+## Features
 
+Acc_sdk currently implements the following Autodesk Construction Cloud APIs:
+
+- The Accoount Users API allows you to add and update groups of users to your account.
+- The Authentication API provides methods to authenticate with the ACC using the OAuth2 2-legged  and/or the 3-legged flows.
+ This class also maintains the validity of the Bearer tokens, by refreshing the tokens as they expire, and manages both 
+ 2-legged and 3-legged tokens at the same time to give you full access to the API services.
+- The Business Units API allows you to createe, update, or get business units in your account.
+- The Companies API provides methods to manage companies, such as adding and updating companies.
 - The Data Management API allows you to manage files and folders in the project. You can upload, download, and
  delete files, create folders, and move files between folders. The API also provides access to the data stored
  in the ACC Data Management module.
+- The Forms API provides methods to securely create forms from a template, fill out, modify, and retrieve form data.
+- The Project Users API provides methods to manage project users, such as adding, updating, deleting, and patching permissions for users on a project.
+- The Projects API provides methods to create, read, update, and delete projects. 
+- The Sheets API provides methods to manage sheets and version sets, as well as uploading, publishing, and exporting sheets as pdfs.
+- The User Profile API provides a method for gathering profile information from the logged in user.
 
-- The User Profile API provides an endpoint for gathering profile information from the logged in user.
 
 ## Contributing
 
@@ -71,26 +85,45 @@ pip install acc_sdk
 poetry install
 ```
 
-## Authentication
 
-To use the ACC API, you need to create an instance of the `ACC` class. The `ACC` class provides access to the various
+## Usage
+
+### Authentication
+
+The first step in using the AccSdk, you need to create an instance of the `ACC` class. The `ACC` class provides access to the various
 services provided by the ACC API.  However, first you need to authenticate with the ACC API. 
 
-The ACC API uses the OAuth2 2 legged client credential flow and/or the 3 legged authorization code flow. Various API services require
-one or the other flows. The Authentication OAuth helper class provides the necessary methods to
+The AccSdk Authentication module implements methods to use the the OAuth2 2-legged and 3-legged authentication processes, and it 
+manages the tokens and their liftimes. The Authentication module class provides the necessary methods to
 
-- Authenticate with the ACC API using either 
-    - 2 legged client credential flow 
-    - 3 legged authorization code flow 
-- Maintains the validity of the Bearer tokens, by refreshing the tokens as they expire
-- Manages both 2-legged and 3-legged tokens at the same time to give you full access to the API services
+- Authenticate with the ACC API using 
+    - 2 legged OAuth Client Credential flow 
+    - 3 legged OAuth Authorization Code flow 
+- Maintain the validity of tokens, by refreshing them as they expire
+- Manage both 2-legged and 3-legged tokens concurrently to give you full access to the API services
+- Revoke tokens
+- Introspect tokens to check their validity
+- Logout of the 3-legged session
+- Get the user profile of the 3-legged token holder
+- Get the OpenID Connect Discovery Document
+- Get the APIs supported scopes
+
+The initialization of the `Authentication` class requires the following parameters:
+- `session`: A Flask session or a Python dictionary that is used to store the tokens and other session-related data.
+- `client_id`: The Client ID of your application. This is provided by Autodesk when you register your application.  
+- `client_secret`: The client secret of your application. This is also provided by Autodesk when you register your application. Optional if you are using PKCE.
+- `admin_email`: The email address of the token holder user. Optional for 2-legged. Used for user_impersonation.
+- `callback_url`: The callback URL that Autodesk will redirect to after the user has authenticated. Required for the 3-legged flow.
+- `login_url`: The login URL for the 3-legged flow. This is the URL that Autodesk will redirect to after the user has authenticated. Optional.
 
 The following code snippet shows how to authenticate with the ACC API using the 2 legged client credential flow.
 
 ```python
 import os
-from accapi import Authentication, Acc
-from dotenv import load_dotenv
+from accapi import Authentication # Authentication Module for managing the authentication process and tokens
+from accapi import Acc
+
+from dotenv import load_dotenv # for optionally loading environment variables from .env file
 load_dotenv()
 
 # Load your environment variables
@@ -99,39 +132,30 @@ CLIENT_ID =  os.environ.get('AUTODESK_CLIENT_ID_WEB_APP'),
 CLIENT_SECRET =  os.environ.get('AUTODESK_CLIENT_SECRET_WEB_APP')
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
 
-# Define the scopes
+
+auth_client = Authentication( session={}, client_id=CLIENT_ID, client_secret=CLIENT_SECRET, admin_email="youremail@adomain.com")  
+
+# Define the scopes you want your token holder to have, 
+
 scopes = [
             "user-profile:read",
-            "user:read",
-            "user:write",
             "viewables:read",
             "data:read",
             "data:write",
-            "data:create",
-            "data:search",
-            "bucket:create",
-            "bucket:read",
-            "bucket:update",
-            "bucket:delete",
-            "code:all",
             "account:read",
             "account:write"
             ] 
 
-# Initalize the class 
-auth_client = Authentication(
-    session={}, 
-    client_id=CLIENT_ID, 
-    client_secret=CLIENT_SECRET, 
-    admin_email="youremail@adomain.com"
-    )  
+# Optionaly query the OpenID Connect Discovery Document to get the API's supported scopes
+scopes = auth_client.get_oidc_spec()
+scopes = [scope for scope in scopes if scope.startswith("data") or scope.startswith("account") or scope.startswith("user-profile")]
 
 # Request the 2 legged token
 auth_client.request_2legged_token(scopes=scopes)
 assert auth_client._session["accapi_2legged"]
 ```
 
-The following code snippet shows how to authenticate with the ACC API using the 3 legged authorization code flow.
+The following code snippet shows a simplified example on how to authenticate using the 3 legged authorization code flow.
 
 ```python
 import os
@@ -141,51 +165,45 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SESSION_KEY") # Required for session usage
+app.secret_key = os.environ.get("FLASK_SESSION_KEY") 
 CLIENT_ID = os.environ.get("AUTODESK_CLIENT_ID_WEB_APP")
 CLIENT_SECRET = os.environ.get("AUTODESK_CLIENT_SECRET_WEB_APP")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
 CALLBACK_URL = "http://127.0.0.1:5000/callback"
 ACCOUNT_ID = os.environ.get("AUTODESK_ACCOUNT_ID")
-SCOPES = [
-    "user-profile:read",
-    "user:read",
-    "user:write",
-    "viewables:read",
-    "data:read",
-    "data:write",
-    "data:create",
-    "account:read",
-    "account:write",
-]
+SCOPES = [ "user-profile:read","user:read","user:write","viewables:read","data:read","data:write","data:create","account:read","account:write"]
+
 @app.route("/", methods=["GET"])
-def index():
-    session.clear()
+def index():    
     return render_template("index.html")
 
 @app.route("/login", methods=["POST"])
 def login():
-    """Called from form submission on index.html. Initiates OAuth2 flow.
-        Redirects to callback URL if successful, or an error message if not.
+    """
+    Called from form submission on index.html. Initiates OAuth2 flow.
+    Redirects to callback URL if successful, or an error message if not.
     """
     email = request.form.get("email")
     session["user_email"] = email
-    auth = Authentication(session,CLIENT_ID,CLIENT_SECRET, session["user_email"], CALLBACK_URL)
+    auth = Authentication(client_id=CLIENT_ID,client_secret=CLIENT_SECRET, session["user_email"], CALLBACK_URL)
     
     authorization_url = auth.get_authorization_url(scopes=SCOPES)
     return redirect(authorization_url)
 
 @app.route("/callback", methods=["GET"])
 def callback():
-    """Second step in the OAuth2 flow. Exchanges auth code for access token.
-        Redirects to dashboard if successful, or an error message if not.
+    """
+    Second step in the OAuth2 flow. Exchanges auth code for access token.
+    Redirects to dashboard if successful, or an error message if not.
     """
     code = request.args.get("code")
     if not code:
         return "No authorization code received.", 400
 
-    # Rebuild the Authentication object from the session
+    # Rebuild the Authentication object from the session to retain the same user context 
     auth = Authentication(session,CLIENT_ID,CLIENT_SECRET, session["user_email"], CALLBACK_URL)
+
+    # Exchange the code for an access token
     token_data = auth.request_authcode_access_token(code=code, scopes=SCOPES)
     if not token_data:
         return "Failed to exchange code for token", 400
@@ -196,10 +214,10 @@ def callback():
 def dashboard():
     """ Final destination of 3 legged Authenticatin flow. """
     
-    # Rebuild the Authentication object from the session
+    # Rebuild the Authentication object from the session to retain the same user context 
     auth = Authentication(session,CLIENT_ID,CLIENT_SECRET, session["user_email"], CALLBACK_URL)
 
-    # Build an ACC instance (accapi) with the user’s authentication context
+    # Build an ACC instance (accapi) with the user's authentication context
     acc = Acc(auth_client=auth, account_id=ACCOUNT_ID)
     return render_template("dashboard.html")
 
@@ -212,12 +230,9 @@ if __name__ == "__main__":
 ```
 
 
-## Initialization
+### Initialization
 
-Once you have authenticated with the ACC API, you can create an instance of the `ACC` class. The `ACC` class provides access to the various services provided by the ACC API. 
-The account id is an optional argument. If you do not provide the account id, the class will attempt to get the Account Id from the 2-legged token.  Not providing the account
-id will not limit the services you can access if you have both the 2-legged and 3-legged tokens and the appropriate scopes.
-
+Once you have authenticated with the ACC API, you can create an instance of the `ACC` class. The `ACC` class provides access to the various services provided by the ACC API. The account id is an optional argument. If you do not provide the account id, the class will attempt to get the Account Id from the 2-legged token.  Not providing the account id will not limit the services you can access if you have both the 2-legged and 3-legged tokens and the appropriate scopes.
 
 ```python
 from accapi import Acc
@@ -227,6 +242,7 @@ acc = Acc(auth_client=auth_client, account_id=ACCOUNT_ID)
 The account id is an optional argument. If you do not provide the account id, the class will attempt to get the Account Id from the 2-legged token.  Not providing the account
 id will not limit the APIs you can access. Best is to provide both 2-legged and 3-legged tokens in the Authentication class with and the appropriate scopes so that
 you can access all the APIs.
+
 
 
 ## Making API Requests
@@ -693,6 +709,28 @@ collection = acc.sheets.get_collection(
     collection_id="collection_id"
 )
 ```
+
+### Using the User Profile API
+
+The `AccUserProfileApi` class provides methods to retrieve information about the authenticated user in Autodesk Construction Cloud (ACC). 
+This API requires a 3-legged token with the `user-profile:read` scope.
+
+#### Get User Information
+
+Retrieve basic information about the authenticated user.
+
+```python
+user_info = acc.user_profile.get_user_info()
+print(user_info)
+```
+
+The response includes details such as:
+- User ID
+- Email address
+- Name
+- Preferred language
+- Picture URL
+- Other OpenID Connect standard claims
 
 ## Required Scopes and Token Types
 

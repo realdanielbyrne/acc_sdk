@@ -18,7 +18,7 @@ class Acc:
         """
         Initializes the Acc aggregator.
 
-        Parameters:
+        Args:
             auth_client (Authentication): The authentication client to use.
             account_id (str): The account ID to use. If not provided, the account ID is determined from the auth_client.
 
