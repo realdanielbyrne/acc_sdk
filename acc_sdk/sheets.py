@@ -412,10 +412,6 @@ class AccSheetsApi:
         
         Returns:
             int: The HTTP status code of the upload request.
-        
-        Raises:
-            ValueError: If the file is not a PDF.
-            FileNotFoundError: If the file does not exist.
 
         Example:
             ```python
@@ -494,9 +490,6 @@ class AccSheetsApi:
         
         Returns:
             dict: The JSON response from Autodesk API for the upload operation.
-        
-        Raises:
-            ValueError: If file data fails validation.
 
         Example:
             ```python
@@ -627,9 +620,6 @@ class AccSheetsApi:
         Returns:
             dict: The 'data' field from the API response.
 
-        Raises:
-            HTTPError: If the API request fails.
-
         Example:
             ```python
             # Get multiple sheets by their IDs
@@ -674,9 +664,6 @@ class AccSheetsApi:
 
         Returns:
             list: The "results" field from the API response, which is a list of updated sheet objects.
-        
-        Raises:
-            requests.HTTPError: If the API response status indicates an error.
 
         Example:
             ```python
@@ -725,9 +712,6 @@ class AccSheetsApi:
 
         Returns:
             list: The "results" field from the API response, which is a list of updated sheet objects.
-        
-        Raises:
-            requests.HTTPError: If the API response status indicates an error.
 
         Example:
             ```python
@@ -767,9 +751,6 @@ class AccSheetsApi:
 
         Returns:
             list: The "results" field from the API response, which is a list of updated sheet objects.
-        
-        Raises:
-            requests.HTTPError: If the API response status indicates an error.
 
         Example:
             ```python
@@ -817,9 +798,6 @@ class AccSheetsApi:
         
         Returns:
             dict: A dictionary containing the export job details including the export job ID and status.
-            
-        Raises:
-            requests.HTTPError: If the response from the API indicates an error.
 
         Example:
             ```python
@@ -881,9 +859,6 @@ class AccSheetsApi:
         Returns:
             dict: A dictionary containing the export job status and, if successful, the signed URL
                 within the result.output object, or error details if the export failed.
-                
-        Raises:
-            requests.HTTPError: If the API response indicates an error.
 
         Example:
             ```python
@@ -940,9 +915,6 @@ class AccSheetsApi:
 
         Returns:
             list: A list of collection objects retrieved from the API.
-
-        Raises:
-            requests.exceptions.HTTPError: For non-successful HTTP responses.
 
         Example:
             ```python
@@ -1013,9 +985,6 @@ class AccSheetsApi:
 
         Returns:
             dict: The collection object retrieved from the API.
-
-        Raises:
-            requests.exceptions.HTTPError: For non-successful HTTP responses.
 
         Example:
             ```python

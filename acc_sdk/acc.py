@@ -12,16 +12,87 @@ from .business_units import AccBusinessUnitsApi
 
 # Aggregator class supporting both 2-legged and 3-legged auth.
 class Acc:
-    def __init__(   self, 
-                    auth_client: Authentication,
-                    account_id=None):
+    """
+    The main entry point for interacting with the Autodesk Construction Cloud (ACC) API.
+    This class aggregates various API services and provides a unified interface for working with ACC.
+
+    Initialization Requirements:
+        - A valid Authentication instance with appropriate tokens
+        - Required scopes depend on which APIs you plan to use:
+            - data:read, data:write for project data operations
+            - account:read, account:write for account management
+            - user-profile:read for user profile operations
+
+    Example:
+        ```python
+        # Initialize authentication with required scopes
+        scopes = [
+            "data:read",
+            "data:write",
+            "account:read",
+            "account:write",
+            "user-profile:read"
+        ]
+        auth_client = Authentication(
+            client_id="your_client_id",
+            client_secret="your_client_secret",
+            session={}
+        )
+        
+        # Get 2-legged token for account operations
+        auth_client.request_2legged_token(scopes=scopes)
+        
+        # Initialize ACC with authentication
+        acc = Acc(auth_client=auth_client, account_id="your_account_id")
+        
+        # Use various ACC services
+        # Get all active projects
+        projects = acc.projects.get_all_active_projects()
+        
+        # Get project users
+        users = acc.project_users.get_users(project_id="project_id")
+        
+        # Get forms with user details
+        forms = acc.get_forms(project_id="project_id")
+        ```
+    """
+
+    def __init__(self, 
+                 auth_client: Authentication,
+                 account_id=None):
         """
-        Initializes the Acc aggregator.
+        Initialize the Acc aggregator with an authentication client.
 
         Args:
-            auth_client (Authentication): The authentication client to use.
-            account_id (str): The account ID to use. If not provided, the account ID is determined from the auth_client.
+            auth_client (Authentication): 
+                The authentication client to use. Must have valid tokens with appropriate scopes.
+                Required scopes depend on which APIs you plan to use:
+                - data:read, data:write for project data operations
+                - account:read, account:write for account management
+                - user-profile:read for user profile operations
+            account_id (str, optional): 
+                The account ID to use. If not provided, the account ID is determined from the auth_client.
 
+        Raises:
+            Exception: If the authentication client is not properly initialized with required tokens.
+
+        Example:
+            ```python
+            # Basic initialization
+            acc = Acc(auth_client=auth_client)
+            
+            # Initialize with specific account ID
+            acc = Acc(
+                auth_client=auth_client,
+                account_id="your_account_id"
+            )
+            
+            # Verify initialization by checking available services
+            print("Available services:")
+            print(f"- Projects API: {acc.projects is not None}")
+            print(f"- Forms API: {acc.forms is not None}")
+            print(f"- Users API: {acc.project_users is not None}")
+            ```
         """
 
         # Initialize the shared base instance.
@@ -48,8 +119,7 @@ class Acc:
     
     def get_forms(self, project_id, **forms_kwargs)->list[dict]:
         """
-        get_forms extension to get forms along with user names and email addresses
-        of the users who created the forms.
+        Get forms along with user names and email addresses of the users who created the forms.
 
         Args:
             project_id (str): The project ID.
@@ -57,6 +127,19 @@ class Acc:
 
         Returns:
             list: A list of forms along with user names and email addresses of the users who created the forms.
+
+        Example:
+            ```python
+            # Get all forms with user details
+            forms = acc.get_forms(project_id="your_project_id")
+            
+            # Get forms with pagination
+            forms = acc.get_forms(
+                project_id="your_project_id",
+                limit=50,
+                offset=0
+            )            
+            ```
         """
         # Retrieve the form templates for the project.
         forms = self.forms.get_forms(project_id, **forms_kwargs)
@@ -84,16 +167,28 @@ class Acc:
 
     def get_forms_for_past30(self, project_id, **forms_kwargs)->list[dict]:
         """
-        get_forms_for_past30 extension to get forms along with user names and email addresses
-        of the users who created the forms that were created within the past 30 days.
+        Get forms along with user names and email addresses of the users who created the forms
+        that were created within the past 30 days.
 
         Args:
             project_id (str): The project ID.
             **forms_kwargs: Additional keyword arguments to pass to the get_forms() method.
 
         Returns:
-            list: A forms entered over the past 30 days.
-        
+            list: A list of forms entered over the past 30 days.
+
+        Example:
+            ```python
+            # Get recent forms with user details
+            recent_forms = acc.get_forms_for_past30(project_id="your_project_id")
+            
+            # Get recent forms with pagination
+            recent_forms = acc.get_forms_for_past30(
+                project_id="your_project_id",
+                limit=50,
+                offset=0
+            )
+            ```
         """
         forms = self.forms.get_forms_for_past30(project_id, **forms_kwargs)
         
@@ -122,12 +217,26 @@ class Acc:
 
     def get_forms_all_active_projects(self, **forms_kwargs):
         """
-        get_forms_all_projects extension to get forms along with user names and email addresses
-        of the users who created the forms for all projects.
+        Get forms along with user names and email addresses of the users who created the forms
+        for all active projects.
 
         Args:
             **forms_kwargs: Additional keyword arguments to pass to the get_forms() method.
-        
+
+        Returns:
+            list: A list of forms from all active projects.
+
+        Example:
+            ```python
+            # Get forms from all active projects
+            all_forms = acc.get_forms_all_active_projects()
+            
+            # Get forms with pagination
+            all_forms = acc.get_forms_all_active_projects(
+                limit=50,
+                offset=0
+            )
+            ```
         """
         projects = self.projects.get_all_active_projects()
         all_forms = []
@@ -138,12 +247,26 @@ class Acc:
 
     def get_forms_all_active_projects_last30(self, **forms_kwargs):
         """
-        get_forms_all_projects_last30 extension to get forms along with user names and email addresses
-        of the users who created the forms for all projects that were created within the past 30 days.
+        Get forms along with user names and email addresses of the users who created the forms
+        for all active projects that were created within the past 30 days.
 
         Args:
             **forms_kwargs: Additional keyword arguments to pass to the get_forms() method.
-        
+
+        Returns:
+            list: A list of forms from all active projects created in the last 30 days.
+
+        Example:
+            ```python
+            # Get recent forms from all active projects
+            recent_forms = acc.get_forms_all_active_projects_last30()
+            
+            # Get recent forms with pagination
+            recent_forms = acc.get_forms_all_active_projects_last30(
+                limit=50,
+                offset=0
+            )
+            ```
         """
         projects = self.projects.get_all_active_projects()
         all_forms = []

@@ -51,8 +51,6 @@ class AccAccountUsersApi:
             ```python
             # Get user by ID
             user = acc.account_users.get_user_by_id("user_uuid")
-            print(f"User name: {user['name']}")
-            print(f"User email: {user['email']}")
             ```
         """
         
@@ -133,13 +131,7 @@ class AccAccountUsersApi:
             users = acc.account_users.get_users(
                 fields="name,email,status",
                 sort="name"
-            )
-            
-            # Print user details
-            for user in users:
-                print(f"Name: {user['name']}")
-                print(f"Email: {user['email']}")
-                print(f"Status: {user['status']}")
+            )        
             ```
         """
         headers = {

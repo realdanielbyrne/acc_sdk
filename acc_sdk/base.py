@@ -57,6 +57,19 @@ class AccBase:
             str: Bearer token
         """
         return self.auth_client.get_3legged_token()
+            
+    def get_private_token(self):
+        """
+        Get the private token from the auth_client.
+
+        Returns:
+            str: Bearer token
+        """
+        return self.get_2leggedToken() if self.get_2leggedToken() else self.get_3leggedToken()
+
+    ############################################################
+    # Private methods
+    ############################################################
 
     def _get_user_by_email(self, email)->dict:
         """Get a user by email address.
@@ -87,15 +100,6 @@ class AccBase:
         
         else:
             None
-            
-    def get_private_token(self):
-        """
-        Get the private token from the auth_client.
-
-        Returns:
-            str: Bearer token
-        """
-        return self.get_2leggedToken() if self.get_2leggedToken() else self.get_3leggedToken()
                     
     def _get_company_id(self):
         """
