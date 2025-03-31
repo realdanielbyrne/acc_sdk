@@ -7,12 +7,28 @@ import time
 class AccProjectUsersApi:
     '''
     This class provides methods to interact with the project users endpoint of the Autodesk Construction Cloud API.
-    The class provides methods to get, add, update, and delete users in a project as well as bulk implementaitons of these methods.
+    The class provides methods to get, add, update, and delete users in a project as well as bulk implementations of these methods.
     
-    Token must be Bearer <token>, where <token> is is obtained via either or with two-legged or three-legged oauth flow.
+    Token must be Bearer <token>, where <token> is obtained via either two-legged or three-legged oauth flow.
     The GET methods require account:read and the POST, PATCH, and DELETE methods require account:write scopes.
     The POST, PATCH, and DELETE methods require the User-Id header to be set to the user's ID when two-legged authentication
     is used.    
+
+    Example:
+        ```python
+        from accapi import Acc
+        acc = Acc(auth_client=auth_client, account_id=ACCOUNT_ID)
+        
+        # Get users from a project
+        users = acc.project_users.get_users(project_id="your_project_uuid")
+        
+        # Add a user to a project
+        new_user = {
+            "email": "user@example.com",
+            "products": AccProjectUsersApi.productmember
+        }
+        created_user = acc.project_users.add_user(project_id="your_project_uuid", user=new_user)
+        ```
     '''
 
     productadmin = [
@@ -103,6 +119,25 @@ class AccProjectUsersApi:
 
         Returns:
             list[dict]: user information, filtered by query_params
+
+        Example:
+            ```python
+            # Get all users from a project
+            users = acc.project_users.get_users(project_id="your_project_uuid")
+            
+            # Get users with pagination
+            users = acc.project_users.get_users(
+                project_id="your_project_uuid",
+                query_params={"limit": 50},
+                follow_pagination=True
+            )
+            
+            # Get users with specific filters
+            filtered_users = acc.project_users.get_users(
+                project_id="your_project_uuid",
+                query_params={"filter[email]": "user@example.com"}
+            )
+            ```
         """
         token = f"Bearer {self.base.get_private_token()}"
 
@@ -149,10 +184,26 @@ class AccProjectUsersApi:
         Args:
             project_id (str): The project UUID
             user_id (str): The ID of the user. You can use either the ACC ID (id) or the Autodesk ID (autodeskId).
-            fields (list[str], optional): List of user fiuelds to return.
+            fields (list[str], optional): List of user fields to return.
 
         Returns:
             dict: Detailed project user dictionary.
+
+        Example:
+            ```python
+            # Get all user fields
+            user = acc.project_users.get_user(
+                project_id="your_project_uuid",
+                user_id="user_uuid"
+            )
+            
+            # Get specific user fields
+            user = acc.project_users.get_user(
+                project_id="your_project_uuid",
+                user_id="user_uuid",
+                fields=["email", "products"]
+            )
+            ```
         """
         token = f"Bearer {self.base.get_private_token()}"
 
@@ -175,11 +226,34 @@ class AccProjectUsersApi:
         https://aps.autodesk.com/en/docs/acc/v1/reference/http/admin-projects-project-Id-users-POST/      
 
         Args:
-            project_id (str): _description_the UUID of the project.
+            project_id (str): The UUID of the project.
             user (dict): A user dictionary including a minimum of email and products keys.
 
         Returns:
             dict: user dictionary    
+
+        Example:
+            ```python
+            # Add a user with member access
+            new_user = {
+                "email": "user@example.com",
+                "products": AccProjectUsersApi.productmember
+            }
+            created_user = acc.project_users.add_user(
+                project_id="your_project_uuid",
+                user=new_user
+            )
+            
+            # Add a user with admin access
+            admin_user = {
+                "email": "admin@example.com",
+                "products": AccProjectUsersApi.productadmin
+            }
+            created_admin = acc.project_users.add_user(
+                project_id="your_project_uuid",
+                user=admin_user
+            )
+            ```
         """
         url = f"{self.base_url}/v1/projects/{project_id}/users"
 
@@ -215,6 +289,25 @@ class AccProjectUsersApi:
 
         Returns:
             None
+
+        Example:
+            ```python
+            # Import multiple users
+            users_to_import = [
+                {
+                    "email": "user1@example.com",
+                    "products": AccProjectUsersApi.productmember
+                },
+                {
+                    "email": "user2@example.com",
+                    "products": AccProjectUsersApi.productadmin
+                }
+            ]
+            acc.project_users.import_users(
+                project_id="your_project_uuid",
+                users=users_to_import
+            )
+            ```
         """
         token = f"Bearer {self.base.get_private_token()}"
 
@@ -253,17 +346,30 @@ class AccProjectUsersApi:
 
     def patch(self, project_id:str, target_user_id:str, data:dict):
         """
-        Updates a user in a project.
+        Updates a user's information in a project.
 
-        https://aps.autodesk.com/en/docs/acc/v1/reference/http/admin-projects-project-Id-users-userId-PATCH/
-        
+        https://aps.autodesk.com/en/docs/acc/v1/reference/http/admin-projectsprojectId-users-userId-PATCH/
+
         Args:
-            project_id (str): A project UUID
-            target_user_id (str): ID of user to update
-            data (dict): User data to update  
+            project_id (str): The project UUID
+            target_user_id (str): The ID of the user to update
+            data (dict): The data to update
 
         Returns:
-            dict: a user dictionary
+            dict: Updated user information
+
+        Example:
+            ```python
+            # Update user's product access
+            update_data = {
+                "products": AccProjectUsersApi.productadmin
+            }
+            updated_user = acc.project_users.patch(
+                project_id="your_project_uuid",
+                target_user_id="user_uuid",
+                data=update_data
+            )
+            ```
         """
         token = f"Bearer {self.base.get_private_token()}"
 
@@ -282,17 +388,34 @@ class AccProjectUsersApi:
 
     def patch_project_users(self, projects: list[dict], users: list[dict], products: list[dict] = None):
         """
-        Patch users in a project using dictionaries.
+        Updates multiple users across multiple projects.
 
-        https://aps.autodesk.com/en/docs/acc/v1/reference/http/admin-projects-project-Id-users-userId-PATCH/
-        
         Args:
-            projects (list[dict]): A list of project dictionaries.
-            users (list[dict]): A list of user dictionaries.
-            products (list[dict], optional): A list of product dictionaries. Defaults to productmember.
-        
+            projects (list[dict]): List of project dictionaries
+            users (list[dict]): List of user dictionaries
+            products (list[dict], optional): List of product access dictionaries
+
         Returns:
             None
+
+        Example:
+            ```python
+            # Get all active projects
+            projects = acc.projects.get_all_active_projects()
+            
+            # Define users to update
+            users = [
+                {"email": "user@example.com"},
+                {"email": "anotheruser@example.com"}
+            ]
+            
+            # Update users across all projects
+            acc.project_users.patch_project_users(
+                projects=projects,
+                users=users,
+                products=AccProjectUsersApi.productadmin
+            )
+            ```
         """
         # Use the provided products or the default if None.
         if products is None:
@@ -332,16 +455,25 @@ class AccProjectUsersApi:
 
     def delete(self, project_id:str, target_user_id:str):
         """
-        Removes the specified user from a project.
+        Deletes a user from a project.
 
-        https://aps.autodesk.com/en/docs/acc/v1/reference/http/admin-projects-project-Id-users-userId-DELETE/
-        
+        https://aps.autodesk.com/en/docs/acc/v1/reference/http/admin-projectsprojectId-users-userId-DELETE/
+
         Args:
-            project_id (str): A project UUID
-            target_user_id (str): The ID of the user to remove from the project.
+            project_id (str): The project UUID
+            target_user_id (str): The ID of the user to delete
 
         Returns:
             None
+
+        Example:
+            ```python
+            # Delete a single user from a project
+            acc.project_users.delete(
+                project_id="your_project_uuid",
+                target_user_id="user_uuid"
+            )
+            ```
         """
         token = f"Bearer {self.base.get_private_token()}"
 
@@ -358,11 +490,27 @@ class AccProjectUsersApi:
 
     def delete_users(self, project_id:str, users:list[dict]):
         """
-        Deletes a list of users from a project.
+        Deletes multiple users from a project.
 
         Args:
-            project_id (str): A project UUID
-            users (list[dict]): A list of user dictionaries with user e-mails to delete from the project.
+            project_id (str): The project UUID
+            users (list[dict]): List of user dictionaries containing email addresses
+
+        Returns:
+            None
+
+        Example:
+            ```python
+            # Delete multiple users from a project
+            users_to_remove = [
+                {"email": "user1@example.com"},
+                {"email": "user2@example.com"}
+            ]
+            acc.project_users.delete_users(
+                project_id="your_project_uuid",
+                users=users_to_remove
+            )
+            ```
         """
         user_emails_set = set([user.get('email') for user in users])
         project_users = self.get_users(project_id)
