@@ -27,7 +27,7 @@ by adding more services or features, and/or sending me a message if you have any
 
 ## Features
 
-Acc_sdk currently implements the following Autodesk Construction Cloud APIs:
+AccSdk currently implements the following Autodesk Construction Cloud APIs:
 
 - The Account Users API allows you to add and update groups of users to your account.
 - The Authentication API provides methods to authenticate with the ACC using the OAuth2 2-legged and/or the 3-legged flows.
