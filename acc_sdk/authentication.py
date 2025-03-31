@@ -18,6 +18,35 @@ class ResponseType(Enum):
 
 
 class Authentication:
+    """
+    This class provides methods to manage authentication with the Autodesk Construction Cloud API.
+    It supports both 2-legged and 3-legged OAuth flows, token management, and various authentication-related operations.
+
+    Example:
+        ```python
+        # Initialize authentication
+        auth_client = Authentication(
+            client_id="your_client_id",
+            client_secret="your_client_secret",
+            admin_email="admin@example.com",  # Optional, for 2-legged user impersonation
+            session={},  # Flask session or dictionary to store tokens
+            callback_url="http://your-app/callback",  # Required for 3-legged flow
+            logout_url="http://your-app/logout"  # Optional, for logout redirect
+        )
+
+        # 2-legged authentication
+        scopes = ["data:read", "data:write", "account:read", "account:write"]
+        token = auth_client.request_2legged_token(scopes=scopes)
+
+        # 3-legged authentication
+        auth_url = auth_client.get_authorization_url(scopes=scopes)
+        # Redirect user to auth_url, then handle callback:
+        token_data = auth_client.request_authcode_access_token(
+            code=request.args.get("code"),
+            scopes=scopes
+        )
+        ```
+    """
 
     def __init__(self, 
                  client_id:str, 
@@ -27,8 +56,8 @@ class Authentication:
                  callback_url:str="",
                  logout_url:str=""
                  ):
-        """Create a new instance of the Authentication client.
-
+        """
+        Create a new instance of the Authentication client.
 
         The AccSdk Authentication module implements methods to use the the OAuth2 2-legged and 3-legged authentication processes, and it 
         manages the tokens and their liftimes. The Authentication module class provides the necessary methods to
@@ -44,25 +73,41 @@ class Authentication:
         - Get the user profile of the 3-legged token holder
         - Get the OpenID Connect Discovery Document
         - Get the APIs supported scopes
-    
 
         Args:
             session (dict): 
-                Session objest where tokens are stored. Can be a Flask session
+                Session object where tokens are stored. Can be a Flask session
                 or a Python dictionary or similar.
             client_id (str): 
                 APS Client Id
             client_secret (str): 
                 APS Client Secret            
-            session (dict): 
-                Session object where tokens are stored. Can be a Flask session
-                or a Python dictionary or similar.
             callback_url (str): 
                 The URL to redirect the user to after 3 legged authorization
             logout_url (str): 
                 The URL to redirect the user to after logging out.
             admin_email (str):
-                The email of the admin user for 2-legged user impersonation.          
+                The email of the admin user for 2-legged user impersonation.
+
+        Example:
+            ```python
+            # Basic initialization
+            auth_client = Authentication(
+                client_id="your_client_id",
+                client_secret="your_client_secret"
+            )
+
+            # Full initialization with Flask session
+            from flask import session
+            auth_client = Authentication(
+                client_id="your_client_id",
+                client_secret="your_client_secret",
+                admin_email="admin@example.com",
+                session=session,
+                callback_url="http://localhost:5000/callback",
+                logout_url="http://localhost:5000/logout"
+            )
+            ```
         """
 
         # Session is something like a Flask session or dictionary
@@ -121,6 +166,23 @@ class Authentication:
     def is_authorized(self, token_name)->bool:
         """
         Check if we have a valid private (3-legged) token stored.
+
+        Args:
+            token_name (str):
+                The name of the token to check.
+
+        Returns:
+            bool: True if the token is valid, False otherwise.
+
+        Example:
+            ```python
+            # Check if 3-legged token is valid
+            is_valid = auth_client.is_authorized("accapi_3legged")
+            if is_valid:
+                print("Token is valid")
+            else:
+                print("Token is invalid or expired")
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -136,8 +198,25 @@ class Authentication:
         """
         Compute how many seconds remain until the stored token expires.
         Returns 0 if not set or already expired.
+
+        Args:
+            token_name (str):
+                The name of the token to check.
+
+        Returns:
+            int: The number of seconds until the token expires.
+
+        Example:
+            ```python
+            # Check token expiration
+            seconds_remaining = auth_client.expires_in("accapi_3legged")
+            if seconds_remaining > 0:
+                print(f"Token expires in {seconds_remaining} seconds")
+            else:
+                print("Token is expired")
+            ```
         """
-            # check to see token_name starts with accapi_
+        # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
             token_name = f"accapi_{token_name}"
 
@@ -155,6 +234,23 @@ class Authentication:
     def is_expired(self, token_name)->bool:
         """
         Return True if the currently stored token(s) are expired.
+
+        Args:
+            token_name (str):
+                The name of the token to check.
+
+        Returns:
+            bool: True if the token is expired, False otherwise.
+
+        Example:
+            ```python
+            # Check if token is expired
+            if auth_client.is_expired("accapi_3legged"):
+                print("Token is expired, refreshing...")
+                auth_client.request_private_refresh_token()
+            else:
+                print("Token is still valid")
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -170,6 +266,18 @@ class Authentication:
         Retrieve the user profile of the 3-legged token holder.
 
         https://aps.autodesk.com/en/docs/profile/v1/reference/profile/oidcuserinfo/
+
+        Returns:
+            dict: The user profile of the 3-legged token holder.
+
+        Example:
+            ```python
+            # Get user profile information
+            user_info = auth_client.get_user_info()
+            print(f"User name: {user_info['name']}")
+            print(f"User email: {user_info['email']}")
+            print(f"User ID: {user_info['uid']}")
+            ```
         """
         access_token = self.get_3legged_token()
         
@@ -190,6 +298,23 @@ class Authentication:
     def get_access_token(self, token_name)->dict:
         """
         Return the access_token from the stored token.
+
+        Args:
+            token_name (str):
+                The name of the token to check.
+
+        Returns:
+            str: The access token.
+
+        Example:
+            ```python
+            # Get access token
+            access_token = auth_client.get_access_token("accapi_3legged")
+            if access_token:
+                print("Access token retrieved successfully")
+            else:
+                print("No valid access token found")
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -209,12 +334,37 @@ class Authentication:
     def get_token_names(self)->list:
         """
         Return a list of all token names stored in the session.
+
+        Returns:
+            list: A list of all token names stored in the session.
+
+        Example:
+            ```python
+            # Get all token names
+            token_names = auth_client.get_token_names()
+            print("Available tokens:")
+            for name in token_names:
+                print(f"- {name}")
+            ```
         """
         return self.token_names
 
     def get_2legged_token(self)->str:
         """
         Search for the first 2 legged token in the session and return it.
+
+        Returns:
+            str: The 2-legged token.
+
+        Example:
+            ```python
+            # Get 2-legged token
+            token = auth_client.get_2legged_token()
+            if token:
+                print("2-legged token retrieved successfully")
+            else:
+                print("No 2-legged token found")
+            ```
         """
         # loop through auth_client._session dictionary 
         # and return the first 3legged token type found        
@@ -227,6 +377,19 @@ class Authentication:
     def get_3legged_token(self)->str:
         """
         Search for the first 3 legged token in the session and return it.
+
+        Returns:
+            str: The 3-legged token.
+
+        Example:
+            ```python
+            # Get 3-legged token
+            token = auth_client.get_3legged_token()
+            if token:
+                print("3-legged token retrieved successfully")
+            else:
+                print("No 3-legged token found")
+            ```
         """
         # loop through auth_client._session dictionary 
         # and return the first 3legged token type found
@@ -243,12 +406,15 @@ class Authentication:
 
     def get_authorization_url(self, scopes:list, **kwargs)->str:
         """
-        Returns the 3-legged authorization URL for redirecting the user the the GET /authorize endpoint.
+        Returns the 3-legged authorization URL for redirecting the user to the GET /authorize endpoint.
 
-        Parameters:
+        Args:
             scopes(list):
                 A list of allowed scopes. Scopes should match the
                 scopes requested in the initial authorization request.
+
+        Returns:
+            str: A 3-legged authorization URL crafted from the scopes requested.
 
         Notes:
             api_reference: https://aps.autodesk.com/en/docs/oauth/v2/reference/http/authorize-GET/   
@@ -257,7 +423,21 @@ class Authentication:
             The app_reference says that the URL should contain a parameter called "state" which is a random string
             generated by the client. This is used to prevent CSRF attacks. However, the tutorial does not mention this
             requirement and does not use it for basic(not PKCE) 3-legged auth.
-          
+
+        Example:
+            ```python
+            # Get authorization URL
+            scopes = ["data:read", "data:write", "account:read"]
+            auth_url = auth_client.get_authorization_url(scopes=scopes)
+            print(f"Redirect user to: {auth_url}")
+            
+            # With PKCE
+            auth_url = auth_client.get_authorization_url(
+                scopes=scopes,
+                code_challenge="your_code_challenge",
+                code_challenge_method="S256"
+            )
+            ```
         """        
         if not scopes:
             raise Exception("Private 3legged scope is required")
@@ -289,10 +469,9 @@ class Authentication:
     def request_authcode_access_token(self, code:str, scopes:list, token_name="accapi_3legged")->dict:
         """
         Obtain a token using the Authorization Code Flow by exchanging an Authorization Code received
-        from an Oauth callback for an access token. 
+        from an Oauth callback for an access token.
         
-
-        Parameters:
+        Args:
             code(str):
                 The authorization code from the redirect.  
             scopes(list):
@@ -300,9 +479,22 @@ class Authentication:
                 scopes requested in the initial authorization request.
             token_name:
                 The name used to save and track this token in the session. 
-                
 
-        https://aps.autodesk.com/en/docs/oauth/v2/reference/http/gettoken-POST/                      
+        Returns:
+            dict: The access token.
+
+        https://aps.autodesk.com/en/docs/oauth/v2/reference/http/gettoken-POST/
+
+        Example:
+            ```python
+            # Exchange authorization code for token
+            scopes = ["data:read", "data:write", "account:read"]
+            token_data = auth_client.request_authcode_access_token(
+                code=request.args.get("code"),
+                scopes=scopes
+            )
+            print(f"Token expires in: {token_data['expires_in']} seconds")
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -352,9 +544,9 @@ class Authentication:
 
     def request_authcode_public_pkce_access_token(self, code, code_verifier, scopes:list, token_name="3legged_public_token")->dict:
         """
-        Exchange an authorization code and a code_verifier for an access token wihtout sending the client_secret.
+        Exchange an authorization code and a code_verifier for an access token without sending the client_secret.
         
-        Parameters:
+        Args:
             code(str):           
                 The authorization code from the redirect.    
             code_verifier(str):  
@@ -365,7 +557,22 @@ class Authentication:
             token_name:
                 The name used to save and track this token in the session.                 
 
+        Returns:
+            dict: The access token.
+
         https://aps.autodesk.com/en/docs/oauth/v2/tutorials/get-3-legged-token-pkce/get-3-legged-token-pkce/
+
+        Example:
+            ```python
+            # Exchange code for token using PKCE
+            scopes = ["data:read", "data:write"]
+            token_data = auth_client.request_authcode_public_pkce_access_token(
+                code=request.args.get("code"),
+                code_verifier="your_code_verifier",
+                scopes=scopes
+            )
+            print(f"Token expires in: {token_data['expires_in']} seconds")
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -415,7 +622,7 @@ class Authentication:
         """
         Exchange an authorization code and a code_verifier for an access token.
         
-        Parameters:
+        Args:
             code(required):           
                 The authorization code from the redirect.    
             code_verifier(required):  
@@ -426,8 +633,22 @@ class Authentication:
             token_name:
                 The name used to save and track this token in the session. 
 
-        
-        https://aps.autodesk.com/en/docs/oauth/v2/tutorials/get-3-legged-token-pkce/get-3-legged-token-pkce-private/          
+        Returns:
+            dict: The access token.
+
+        https://aps.autodesk.com/en/docs/oauth/v2/tutorials/get-3-legged-token-pkce/get-3-legged-token-pkce-private/
+
+        Example:
+            ```python
+            # Exchange code for token using private PKCE
+            scopes = ["data:read", "data:write"]
+            token_data = auth_client.request_authcode_private_pkce_access_token(
+                code=request.args.get("code"),
+                code_verifier="your_code_verifier",
+                scopes=scopes
+            )
+            print(f"Token expires in: {token_data['expires_in']} seconds")
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -484,15 +705,28 @@ class Authentication:
         Refresh an access token with a refresh token. 
         Optionally pass in a subset of the refresh token's scopes.
 
-        Parameters:
+        Args:
             scopes(list):
                 A list of allowed scopes. Scopes should equivalent or a subset
                 of the scopes used to request the access token.
             token_name (str): 
                 The name used to save and track this token in the session.
-                
+
+        Returns:
+            dict: The access token.
 
         https://aps.autodesk.com/en/docs/oauth/v2/reference/http/gettoken-POST/
+
+        Example:
+            ```python
+            # Refresh token with all original scopes
+            token_data = auth_client.request_private_refresh_token()
+            
+            # Refresh token with subset of scopes
+            scopes = ["data:read"]
+            token_data = auth_client.request_private_refresh_token(scopes=scopes)
+            print(f"Token refreshed, expires in: {token_data['expires_in']} seconds")
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -536,9 +770,30 @@ class Authentication:
     def request_public_refresh_token(self, scopes:list=[], token_name="3legged_public_token")->dict:
         """
         Refresh an access token with a refresh token. 
-        Optionally pass in a subset the refresh token's scopes.
+        Optionally pass in a subset of the refresh token's scopes.
+
+        Args:
+            scopes(list):
+                A list of allowed scopes. Scopes should equivalent or a subset
+                of the scopes used to request the access token.
+            token_name (str): 
+                The name used to save and track this token in the session.
+
+        Returns:
+            dict: The access token.
 
         https://aps.autodesk.com/en/docs/oauth/v2/reference/http/gettoken-POST/
+
+        Example:
+            ```python
+            # Refresh public token
+            token_data = auth_client.request_public_refresh_token()
+            
+            # Refresh with subset of scopes
+            scopes = ["data:read"]
+            token_data = auth_client.request_public_refresh_token(scopes=scopes)
+            print(f"Token refreshed, expires in: {token_data['expires_in']} seconds")
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -588,7 +843,31 @@ class Authentication:
         Obtain a 2 legged, Client Credentials Flow grant type, Bearer Access Token 
         using a client_id/client_secret pair.
 
+        Args:
+            scopes(list):
+                A list of allowed scopes. Scopes should equivalent or a subset
+                of the scopes used to request the access token.
+            token_name (str): 
+                The name used to save and track this token in the session.
+
+        Returns:
+            dict: The access token.
+
         https://aps.autodesk.com/en/docs/oauth/v2/reference/http/gettoken-POST/
+
+        Example:
+            ```python
+            # Get 2-legged token
+            scopes = ["data:read", "data:write", "account:read"]
+            token_data = auth_client.request_2legged_token(scopes=scopes)
+            print(f"Token expires in: {token_data['expires_in']} seconds")
+            
+            # Get token with specific name
+            token_data = auth_client.request_2legged_token(
+                scopes=scopes,
+                token_name="accapi_custom_token"
+            )
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -647,11 +926,24 @@ class Authentication:
         Returns a URL GET endpoint which will clear their session and clear the tokens
         on the server.  
 
-        Thje local session is not cleared in this method. The client should call 
+        The local session is not cleared in this method. The client should call 
         clear_token_session() after redirecting the user to this URL.
-        
+
+        Returns:
+            str: A URL GET endpoint which will clear their session and clear the tokens
+            on the server.
 
         https://aps.autodesk.com/en/docs/oauth/v2/reference/http/logout-GET/
+
+        Example:
+            ```python
+            # Get logout URL
+            logout_url = auth_client.get_logout_url()
+            print(f"Redirect user to: {logout_url}")
+            
+            # After redirect, clear local session
+            auth_client.clear_all_tokens()
+            ```
         """        
         logout_url = self.logout_url
         if self.post_logout_url:
@@ -662,6 +954,17 @@ class Authentication:
     def clear_token_session(self, token_name):
         """
         Clears the session of a specific token.
+
+        Args:
+            token_name (str):
+                The name of the token to clear.
+
+        Example:
+            ```python
+            # Clear specific token
+            auth_client.clear_token_session("accapi_3legged")
+            print("Token cleared from session")
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -676,6 +979,13 @@ class Authentication:
     def clear_all_tokens(self):
         """
         Clears all tokens from the session.
+
+        Example:
+            ```python
+            # Clear all tokens
+            auth_client.clear_all_tokens()
+            print("All tokens cleared from session")
+            ```
         """
         for token_name in self.token_names:
             self.clear_token_session(token_name)
@@ -684,7 +994,28 @@ class Authentication:
         """
         Revoke a token using the POST revoke endpoint.
         
+        Args:
+            token_name (str):
+                The name of the token to revoke.
+            token_type (str):
+                The type of token to revoke (access_token | refresh_token).
+
+        Returns:
+            dict: The response from the revoke endpoint.
+
         https://aps.autodesk.com/en/docs/oauth/v2/reference/http/revoke-POST/
+
+        Example:
+            ```python
+            # Revoke access token
+            auth_client.revoke_public_token("accapi_3legged")
+            
+            # Revoke refresh token
+            auth_client.revoke_public_token(
+                token_name="accapi_3legged",
+                token_type="refresh_token"
+            )
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -716,11 +1047,28 @@ class Authentication:
         """
         Revoke a token using the POST revoke endpoint.
 
-        Parameters:
-            token(required): The token to revoke.
-            token_type: The type of token to revoke (access_token | refresh_token).
-        
+        Args:
+            token_name (str):
+                The name of the token to revoke.
+            token_type (str):
+                The type of token to revoke (access_token | refresh_token).
+
+        Returns:
+            dict: The response from the revoke endpoint.
+
         https://aps.autodesk.com/en/docs/oauth/v2/reference/http/revoke-POST/
+
+        Example:
+            ```python
+            # Revoke access token
+            auth_client.revoke_private_token("accapi_3legged")
+            
+            # Revoke refresh token
+            auth_client.revoke_private_token(
+                token_name="accapi_3legged",
+                token_type="refresh_token"
+            )
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -754,7 +1102,24 @@ class Authentication:
         """
         Introspect a token to determine its validity.
         
+        Args:
+            token_name (str):
+                The name of the token to introspect.
+
+        Returns:
+            dict: The response from the introspect endpoint.
+
         https://aps.autodesk.com/en/docs/oauth/v2/reference/http/introspect-POST/
+
+        Example:
+            ```python
+            # Check token validity
+            result = auth_client.introspect_public_token("accapi_3legged")
+            if result.get("active"):
+                print("Token is valid")
+            else:
+                print("Token is invalid")
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -780,7 +1145,24 @@ class Authentication:
         """
         Introspect a token to determine its validity.
         
+        Args:
+            token_name (str):
+                The name of the token to introspect.
+
+        Returns:
+            dict: The response from the introspect endpoint.
+
         https://aps.autodesk.com/en/docs/oauth/v2/reference/http/introspect-POST/
+
+        Example:
+            ```python
+            # Check token validity
+            result = auth_client.introspect_private_token("accapi_3legged")
+            if result.get("active"):
+                print("Token is valid")
+            else:
+                print("Token is invalid")
+            ```
         """
         # check to see token_name starts with accapi_
         if not token_name.startswith("accapi_"):
@@ -808,7 +1190,18 @@ class Authentication:
         """
         Retrieve the OpenID Connect Discovery Document.
         
+        Returns:
+            dict: The OpenID Connect Discovery Document.
+
         https://aps.autodesk.com/en/docs/oauth/v2/reference/http/.well-known/openid-configuration-GET/
+
+        Example:
+            ```python
+            # Get OpenID Connect specification
+            spec = auth_client.get_oidc_spec()
+            print(f"Supported scopes: {spec.get('scopes_supported')}")
+            print(f"Token endpoint: {spec.get('token_endpoint')}")
+            ```
         """
         response = requests.get(self.oidc_spec_url)
         if response.status_code == 200:

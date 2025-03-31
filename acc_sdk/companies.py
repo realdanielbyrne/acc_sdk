@@ -12,6 +12,24 @@ class AccCompaniesApi:
     The GET methods require account:read scope and either a 2-legged or 3-legged auth token, and the POST and PATCH methods
     require account:write scope and a 2-legged auth token.
 
+    Example:
+        ```python
+        from accapi import Acc
+        acc = Acc(auth_client=auth_client, account_id=ACCOUNT_ID)
+        
+        # Get all companies
+        companies = acc.companies.get_companies()
+        
+        # Get a specific company
+        company = acc.companies.get_company(company_id="company_uuid")
+        
+        # Update company details
+        updated_company = acc.companies.update_company(
+            account_id="account_uuid",
+            company_id="company_uuid",
+            data={"name": "New Company Name"}
+        )
+        ```
     '''
     def __init__(self, base: AccBase):
         self.base = base
@@ -32,7 +50,7 @@ class AccCompaniesApi:
             filter_erpId (str, optional): Filter companies by ERP Id.
             filter_taxId (str, optional): Filter companies by tax Id.
             filter_updatedAt (str, optional): Filter companies by updated at date range.
-            orFilters (list or str, optional): List of fields to apply an “or” operator.
+            orFilters (list or str, optional): List of fields to apply an "or" operator.
             filterTextMatch (str, optional): How to match text fields (e.g. contains, startsWith, etc.).
             sort (list or str, optional): List of fields to sort by.
             fields (list or str, optional): List of fields to return in the response.
@@ -41,6 +59,26 @@ class AccCompaniesApi:
 
         Returns:
             list: The list of companies (results array) from the API response.
+
+        Example:
+            ```python
+            # Get all companies
+            companies = acc.companies.get_companies()
+            
+            # Get companies with pagination
+            companies = acc.companies.get_companies(limit=50, offset=0)
+            
+            # Filter companies by name and trade
+            construction_companies = acc.companies.get_companies(
+                filter_name="Construction Co",
+                filter_trade="Concrete"
+            )
+            
+            # Get companies updated in the last month
+            recent_companies = acc.companies.get_companies(
+                filter_updatedAt="2024-02-25..2024-03-25"
+            )
+            ```
         """
         token = f"Bearer {self.base.get_2leggedToken()}"
             
@@ -99,7 +137,14 @@ class AccCompaniesApi:
             company_id (str): The ID of the company to retrieve.
 
         Returns:
-            dict: The company object from the API response.        
+            dict: The company object from the API response.
+
+        Example:
+            ```python
+            # Get a specific company by ID
+            company = acc.companies.get_company(company_id="company_uuid")
+            print(company["name"])  # Print company name
+            ```
         """
         token = f"Bearer {self.base.get_private_token()}"
             
@@ -142,6 +187,30 @@ class AccCompaniesApi:
         
         Raises:
             requests.HTTPError: If the HTTP request returns a status code indicating an error.
+
+        Example:
+            ```python
+            # Update company details
+            update_data = {
+                "name": "Updated Company Name",
+                "trade": "Concrete",
+                "phone": "(503)623-1525"
+            }
+            updated_company = acc.companies.update_company(
+                account_id="account_uuid",
+                company_id="company_uuid",
+                data=update_data
+            )
+            print(updated_company["name"])  # Print updated company name
+            
+            # Update company in EMEA region
+            updated_company = acc.companies.update_company(
+                account_id="account_uuid",
+                company_id="company_uuid",
+                data=update_data,
+                region="EMEA"
+            )
+            ```
         """
         # Retrieve OAuth token
         token = self.base.get_2leggedToken()
@@ -197,6 +266,32 @@ class AccCompaniesApi:
         
         Raises:
             requests.HTTPError: If the HTTP request fails.
+
+        Example:
+            ```python
+            # Update company image with auto-detected MIME type
+            updated_company = acc.companies.update_company_image(
+                account_id="account_uuid",
+                company_id="company_uuid",
+                file_path="path/to/company_logo.png"
+            )
+            
+            # Update company image with specific MIME type
+            updated_company = acc.companies.update_company_image(
+                account_id="account_uuid",
+                company_id="company_uuid",
+                file_path="path/to/company_logo.png",
+                mime_type="image/png"
+            )
+            
+            # Update company image in EMEA region
+            updated_company = acc.companies.update_company_image(
+                account_id="account_uuid",
+                company_id="company_uuid",
+                file_path="path/to/company_logo.png",
+                region="EMEA"
+            )
+            ```
         """
         # Retrieve OAuth token
         token = self.base.get_2leggedToken()

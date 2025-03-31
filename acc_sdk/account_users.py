@@ -3,6 +3,34 @@ import requests
 from .base import AccBase
 
 class AccAccountUsersApi:
+    """
+    This class provides methods to interact with the account users endpoint of the Autodesk Construction Cloud API.
+    
+    Authentication must be Bearer <token>, where <token> is obtained via a two-legged OAuth flow.
+    The GET methods require account:read scope, and the POST/PATCH methods require account:write scope.
+
+    Example:
+        ```python
+        from accapi import Acc
+        acc = Acc(auth_client=auth_client, account_id=ACCOUNT_ID)
+        
+        # Get all users
+        users = acc.account_users.get_users()
+        
+        # Create a new user
+        new_user = {
+            "email": "user@example.com",
+            "company_id": "company_uuid"
+        }
+        created_user = acc.account_users.post_user(new_user)
+        
+        # Update user status
+        updated_user = acc.account_users.patch_user(
+            user_email="user@example.com",
+            status="active"
+        )
+        ```
+    """
     def __init__(self, base: AccBase):
         self.base_url = "https://developer.api.autodesk.com/hq/v1"
         self.base = base
@@ -18,6 +46,14 @@ class AccAccountUsersApi:
 
         Returns:
             dict: user object
+
+        Example:
+            ```python
+            # Get user by ID
+            user = acc.account_users.get_user_by_id("user_uuid")
+            print(f"User name: {user['name']}")
+            print(f"User email: {user['email']}")
+            ```
         """
         
         headers = {"Content-Type": "application/json", 
@@ -41,6 +77,16 @@ class AccAccountUsersApi:
 
         Returns:
             dict: user object
+
+        Example:
+            ```python
+            # Get user by email
+            user = acc.account_users.get_user_by_email("user@example.com")
+            if user:
+                print(f"Found user: {user['name']}")
+            else:
+                print("User not found")
+            ```
         """
         if email == None:
             raise Exception("Email is required")
@@ -74,10 +120,27 @@ class AccAccountUsersApi:
             limit (int, optional): Limit the number of users to return. Default 10, Max 100.
             offset (int, optional): Offset the number of users to return. Defaults to 0.
 
-
         Returns:
             list[dict]: A successful response is an array of users, flat JSON objects 
             with the following attributes:
+
+        Example:
+            ```python
+            # Get all users
+            users = acc.account_users.get_users()
+            
+            # Get users with specific fields
+            users = acc.account_users.get_users(
+                fields="name,email,status",
+                sort="name"
+            )
+            
+            # Print user details
+            for user in users:
+                print(f"Name: {user['name']}")
+                print(f"Email: {user['email']}")
+                print(f"Status: {user['status']}")
+            ```
         """
         headers = {
             "Content-Type": "application/json",
@@ -119,7 +182,7 @@ class AccAccountUsersApi:
             company_name (str): User company to match
             operator (str): Boolean operator to use: OR (default) or AND
             partial (bool): If true (default), perform a fuzzy match
-            limit (int): Response array’s size
+            limit (int): Response array's size
             offset (int): Offset of response array
             sort (str): Comma-separated fields to sort by in ascending order, prepending 
             a field with - sorts in descending order. Invalid fields and whitespaces will be ignored.
@@ -130,6 +193,29 @@ class AccAccountUsersApi:
 
         Returns:
             list[dict]: a list of user objects matching the search criteria
+
+        Example:
+            ```python
+            # Search users by name
+            users = acc.account_users.get_users_search(
+                name="John",
+                partial=True
+            )
+            
+            # Search users by company
+            company_users = acc.account_users.get_users_search(
+                company_name="Construction Co",
+                operator="AND"
+            )
+            
+            # Search with multiple criteria
+            filtered_users = acc.account_users.get_users_search(
+                name="John",
+                company_name="Construction Co",
+                operator="AND",
+                sort="-name"
+            )
+            ```
         """
         headers = {
             "Content-Type": "application/json",
@@ -164,6 +250,25 @@ class AccAccountUsersApi:
 
         Returns:
             dict: the user object
+
+        Example:
+            ```python
+            # Create a new user
+            new_user = {
+                "email": "user@example.com",
+                "company_id": "company_uuid",
+                "name": "John Doe"
+            }
+            created_user = acc.account_users.post_user(new_user)
+            print(f"Created user: {created_user['name']}")
+            
+            # Create user with default company
+            new_user = {
+                "email": "user@example.com",
+                "name": "John Doe"
+            }
+            created_user = acc.account_users.post_user(new_user)
+            ```
         """
         if user.get("email") == None:
             raise Exception("User email is required at a minimum.")
@@ -207,7 +312,38 @@ class AccAccountUsersApi:
             failure (int): Import failure company count
             success_items (list[dict]): Array of user objects that were successfully imported
             failure_items (list[dict]): Array of user objects that failed to import, 
-            along with content and error information            
+            along with content and error information
+
+        Example:
+            ```python
+            # Import multiple users
+            users_to_import = [
+                {
+                    "email": "user1@example.com",
+                    "company_id": "company_uuid",
+                    "name": "John Doe"
+                },
+                {
+                    "email": "user2@example.com",
+                    "company_id": "company_uuid",
+                    "name": "Jane Smith"
+                }
+            ]
+            result = acc.account_users.post_users(users_to_import)
+            
+            # Check import results
+            print(f"Successfully imported: {result['success']} users")
+            print(f"Failed to import: {result['failure']} users")
+            
+            # Print successful imports
+            for user in result['success_items']:
+                print(f"Created user: {user['name']}")
+            
+            # Print failed imports
+            for failure in result['failure_items']:
+                print(f"Failed to import: {failure['email']}")
+                print(f"Error: {failure['error']}")
+            ```
         """
         for user in users:
             if user.get("company_id") == None and self.base.company_id:
@@ -245,6 +381,30 @@ class AccAccountUsersApi:
 
         Returns:
             dict: The user object
+
+        Example:
+            ```python
+            # Update user status
+            updated_user = acc.account_users.patch_user(
+                user_email="user@example.com",
+                status="active"
+            )
+            print(f"Updated user status: {updated_user['status']}")
+            
+            # Update user's company
+            updated_user = acc.account_users.patch_user(
+                user_email="user@example.com",
+                company_id="new_company_uuid"
+            )
+            print(f"Updated user company: {updated_user['company_id']}")
+            
+            # Update both status and company
+            updated_user = acc.account_users.patch_user(
+                user_email="user@example.com",
+                status="inactive",
+                company_id="new_company_uuid"
+            )
+            ```
         """
         if status and status not in ["active", "inactive"]:
             raise Exception("Status must be either 'active' or 'inactive'")

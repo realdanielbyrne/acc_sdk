@@ -4,6 +4,35 @@ from .base import AccBase
 
 
 class AccBusinessUnitsApi:
+    """
+    This class provides methods to interact with the business units endpoint of the Autodesk Construction Cloud API.
+    
+    Authentication must be Bearer <token>, where <token> is obtained via a two-legged OAuth flow.
+    The GET method requires account:read scope, and the PUT method requires account:write scope.
+    The Authentication Context is app only.
+
+    Example:
+        ```python
+        from accapi import Acc
+        acc = Acc(auth_client=auth_client, account_id=ACCOUNT_ID)
+        
+        # Get all business units
+        business_units = acc.business_units.get_business_units()
+        
+        # Update business units structure
+        new_structure = [
+            {
+                "name": "North America",
+                "description": "North American operations"
+            },
+            {
+                "name": "Europe",
+                "description": "European operations"
+            }
+        ]
+        updated_units = acc.business_units.update_business_units(new_structure)
+        ```
+    """
     def __init__(self, base: AccBase):
         self.base_url = "https://developer.api.autodesk.com/hq/v1/accounts/:account_id/business_units_structure"
         self.base = base
@@ -18,7 +47,19 @@ class AccBusinessUnitsApi:
         https://aps.autodesk.com/en/docs/acc/v1/reference/http/business_units_structure-GET/
 
         Returns:
-            list[dict]: An array of business units associated with the account_id                
+            list[dict]: An array of business units associated with the account_id
+
+        Example:
+            ```python
+            # Get all business units
+            business_units = acc.business_units.get_business_units()
+            
+            # Print business unit names
+            for unit in business_units:
+                print(f"Business Unit: {unit['name']}")
+                if 'description' in unit:
+                    print(f"Description: {unit['description']}")
+            ```
         """
         token = f"Bearer {self.base.get_2leggedToken()}"
         headers = {"Authorization": token}
@@ -55,6 +96,46 @@ class AccBusinessUnitsApi:
 
         Returns:
             list[dict]: An array of created or modified business units.
+
+        Example:
+            ```python
+            # Create a new business unit structure
+            new_structure = [
+                {
+                    "name": "North America",
+                    "description": "North American operations"
+                },
+                {
+                    "name": "Europe",
+                    "description": "European operations"
+                }
+            ]
+            updated_units = acc.business_units.update_business_units(new_structure)
+            
+            # Update existing business unit with ID
+            existing_structure = [
+                {
+                    "id": "existing_unit_id",
+                    "name": "Updated North America",
+                    "description": "Updated North American operations"
+                }
+            ]
+            updated_units = acc.business_units.update_business_units(existing_structure)
+            
+            # Create hierarchical structure
+            hierarchical_structure = [
+                {
+                    "name": "Global Operations",
+                    "description": "Global headquarters"
+                },
+                {
+                    "name": "North America",
+                    "parent_id": "global_ops_id",
+                    "description": "North American division"
+                }
+            ]
+            updated_units = acc.business_units.update_business_units(hierarchical_structure)
+            ```
         """
         token = f"Bearer {self.base.get_2leggedToken()}"
         headers = {"Authorization": token,

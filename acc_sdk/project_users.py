@@ -348,7 +348,8 @@ class AccProjectUsersApi:
         """
         Updates a user's information in a project.
 
-        https://aps.autodesk.com/en/docs/acc/v1/reference/http/admin-projectsprojectId-users-userId-PATCH/
+        https://aps.autodesk.com/en/docs/acc/v1/reference/http/admin-projects-project-Id-users-userId-PATCH/
+
 
         Args:
             project_id (str): The project UUID
@@ -389,6 +390,7 @@ class AccProjectUsersApi:
     def patch_project_users(self, projects: list[dict], users: list[dict], products: list[dict] = None):
         """
         Updates multiple users across multiple projects.
+        https://aps.autodesk.com/en/docs/acc/v1/reference/http/admin-projects-project-Id-users-userId-PATCH/
 
         Args:
             projects (list[dict]): List of project dictionaries
@@ -457,7 +459,7 @@ class AccProjectUsersApi:
         """
         Deletes a user from a project.
 
-        https://aps.autodesk.com/en/docs/acc/v1/reference/http/admin-projectsprojectId-users-userId-DELETE/
+        https://aps.autodesk.com/en/docs/acc/v1/reference/http/admin-projects-project-Id-users-userId-DELETE/
 
         Args:
             project_id (str): The project UUID
