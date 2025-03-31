@@ -14,8 +14,15 @@ class AccUserProfileApi:
         
         Returns:
             dict: User information
+
+        Example:
+            ```python
+            user_info = acc.userprofile.get_user_info()
+            print(user_info)
+            ```
         """
-        headers = { "Authorization": f"Bearer {self.base.get_3leggedToken()}" }
+        token = self.base.get_private_token()
+        headers = { "Authorization": f"Bearer {token}" }
         response = requests.get(
             f"{self.baseAddress}/userinfo",
             headers=headers

@@ -10,6 +10,22 @@ class AccFormsApi:
 
     Token must be Bearer <token>, where <token> is is obtained via a three-legged OAuth flow
     for the GET, POST, PATCH, and PUT methods.
+
+    Example:
+        ```python
+        from accapi import Acc
+        acc = Acc(auth_client=auth_client, account_id=ACCOUNT_ID)
+        
+        # Get all forms in a project
+        forms = acc.forms.get_forms(project_id="your_project_id")
+        
+        # Create a new form
+        new_form = acc.forms.post_form(
+            project_id="your_project_id",
+            template_id="template_uuid",
+            data={"customValues": {"field1": "value1"}}
+        )
+        ```
     '''       
     def __init__(self, base: AccBase):
         self.base = base        
@@ -42,6 +58,32 @@ class AccFormsApi:
 
         Returns:
             list: A list of forms in the project.
+
+        Example:
+            ```python
+            # Get all forms
+            forms = acc.forms.get_forms(project_id="your_project_id")
+            
+            # Get forms with pagination
+            forms = acc.forms.get_forms(
+                project_id="your_project_id",
+                follow_pagination=True
+            )
+            
+            # Get forms filtered by date range
+            forms = acc.forms.get_forms(
+                project_id="your_project_id",
+                formDateMin="2024-01-01T00:00:00Z",
+                formDateMax="2024-03-25T23:59:59Z"
+            )
+            
+            # Get forms by template and status
+            forms = acc.forms.get_forms(
+                project_id="your_project_id",
+                templateId="template_uuid",
+                statuses="draft,inReview"
+            )
+            ```
         """        
         # Remove the "b." prefix if present.
         if project_id.startswith("b."):
@@ -119,6 +161,25 @@ class AccFormsApi:
 
         Returns:
             list: A list of all form templates for the specified project.
+
+        Example:
+            ```python
+            # Get all templates
+            templates = acc.forms.get_templates(project_id="your_project_id")
+            
+            # Get templates with pagination
+            templates = acc.forms.get_templates(
+                project_id="your_project_id",
+                follow_pagination=True
+            )
+            
+            # Get recently updated templates
+            templates = acc.forms.get_templates(
+                project_id="your_project_id",
+                updatedAfter="2024-01-01T00:00:00Z",
+                sortOrder="desc"
+            )
+            ```
         """
         # Remove the "b." prefix from the project_id if it exists.
         if project_id.startswith("b."):
@@ -173,7 +234,20 @@ class AccFormsApi:
             **kwargs: Additional keyword arguments to pass to the get_forms() method.
 
         Returns:
-            list: A list of forms that were created within the past 30 days.            
+            list: A list of forms that were created within the past 30 days.
+
+        Example:
+            ```python
+            # Get forms from the past 30 days
+            recent_forms = acc.forms.get_forms_for_past30(project_id="your_project_id")
+            
+            # Get forms from the past 30 days with additional filters
+            recent_forms = acc.forms.get_forms_for_past30(
+                project_id="your_project_id",
+                templateId="template_uuid",
+                statuses="completed"
+            )
+            ```
         """
         today = date.today()
         date_minus_30 = today - timedelta(days=30)
@@ -194,6 +268,31 @@ class AccFormsApi:
             template_id (str): The form template ID from GET forms.
             data (dict): The form data to create the form.
 
+        Returns:
+            dict: The created form object.
+
+        Example:
+            ```python
+            # Create a new form
+            form_data = {
+                "customValues": {
+                    "field1": "value1",
+                    "field2": "value2"
+                },
+                "tabularValues": {
+                    "table1": [
+                        {"column1": "value1", "column2": "value2"},
+                        {"column1": "value3", "column2": "value4"}
+                    ]
+                }
+            }
+            new_form = acc.forms.post_form(
+                project_id="your_project_id",
+                template_id="template_uuid",
+                data=form_data
+            )
+            print(new_form["id"])  # Print the new form ID
+            ```
         """
         url = f"{self.base_url}/projects/{project_id}/form-templates/{template_id}/forms"
 
@@ -204,7 +303,7 @@ class AccFormsApi:
 
     def patch_form(self, project_id:str, template_id:str, form_id:str, data:dict)->dict:
         """
-        Updates a form’s form details. Note that we do not currently support updating PDF forms.
+        Updates a form's form details. Note that we do not currently support updating PDF forms.
 
         To edit a form, it must be in draft or inReview status and the user must have permissions to edit the form.
         
@@ -216,6 +315,25 @@ class AccFormsApi:
             form_id (str): The form ID from GET forms.
             data (dict): The form data split into customValues(non-tabular fields) and tabularValues(tabular fields).
 
+        Returns:
+            dict: The updated form object.
+
+        Example:
+            ```python
+            # Update form details
+            update_data = {
+                "customValues": {
+                    "field1": "updated_value1"
+                }
+            }
+            updated_form = acc.forms.patch_form(
+                project_id="your_project_id",
+                template_id="template_uuid",
+                form_id="form_uuid",
+                data=update_data
+            )
+            print(updated_form["id"])  # Print the updated form ID
+            ```
         """
         url = f"{self.base_url}/projects/{project_id}/form-templates/{template_id}/forms/{form_id}"
 
@@ -227,7 +345,7 @@ class AccFormsApi:
 
     def put_form(self, project_id:str, form_id:str, data:dict)->dict:
         """
-        Updates a form’s main form fields, both tabular and non-tabular. Note that we do not currently support updating PDF forms.
+        Updates a form's main form fields, both tabular and non-tabular. Note that we do not currently support updating PDF forms.
         To edit form values, the form needs to be in draft status and the user must have permissions to edit the form. 
         
         https://aps.autodesk.com/en/docs/acc/v1/reference/http/forms-forms-formId-PUT/
@@ -238,6 +356,28 @@ class AccFormsApi:
 
         Returns:
             dict: The form object from the API response.
+
+        Example:
+            ```python
+            # Batch update form fields
+            update_data = {
+                "customValues": {
+                    "field1": "new_value1",
+                    "field2": "new_value2"
+                },
+                "tabularValues": {
+                    "table1": [
+                        {"column1": "new_value1", "column2": "new_value2"}
+                    ]
+                }
+            }
+            updated_form = acc.forms.put_form(
+                project_id="your_project_id",
+                form_id="form_uuid",
+                data=update_data
+            )
+            print(updated_form)  # Print the updated form data
+            ```
         """
         url = f"{self.base_url}/projects/{project_id}/forms/{form_id}/values:batch-update"
 
