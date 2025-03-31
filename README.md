@@ -82,7 +82,7 @@ pip install acc_sdk
 poetry install
 ```
 
-## Usage
+## Basic Usage
 
 ### Authentication
 
