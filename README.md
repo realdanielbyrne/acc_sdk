@@ -305,6 +305,7 @@ photos = acc.photos.get_filtered_photos(
 ```
 
 The `get_filtered_photos` method supports various filter parameters:
+
 - `limit` and `offset` for pagination
 - `sortBy` and `sortOrder` for sorting results
 - `mediaType` to filter by type (NORMAL, INFRARED, PHOTOSPHERE, VIDEO)
@@ -314,6 +315,7 @@ The `get_filtered_photos` method supports various filter parameters:
 - `isPublic` and `locked` status filters
 
 The response includes:
+
 - `data`: List of photo objects with details like title, description, media type, creation date, etc.
 - `meta`: Metadata including total count and pagination information
 - Optional `signedUrls` for direct access to media files
@@ -660,7 +662,7 @@ Below are the main functionalities, along with usage examples:
 
 Version sets group sheets by their issuance date.
 
-**Create a Version Set**
+Create a Version Set
 
 ```python
 from datetime import datetime
@@ -671,13 +673,13 @@ version_set = acc.sheets.create_version_set(
 )
 ```
 
-**Get All Version Sets**
+Get All Version Sets
 
 ```python
 version_sets = acc.sheets.get_version_sets(project_id="your_project_id")
 ```
 
-**Update a Version Set**
+Update a Version Set
 
 ```python
 acc.sheets.patch_version_set(
@@ -688,7 +690,7 @@ acc.sheets.patch_version_set(
 )
 ```
 
-**Delete a Version Set**
+Delete a Version Set
 
 ```python
 acc.sheets.delete_version_set(
@@ -701,8 +703,6 @@ acc.sheets.delete_version_set(
 
 Upload sheets to Autodesk using Object Storage Service (OSS).
 
-**Upload PDF to Autodesk**
-
 ```python
 bucket_key, object_key = acc.sheets.upload_file_to_autodesk("project_id", "sheet.pdf")
 signed_url_info = acc.sheets.get_signed_s3_upload(bucket_key, object_key)
@@ -712,13 +712,13 @@ upload_response = acc.sheets.complete_s3_upload(bucket_key, object_key, signed_u
 
 #### Managing Sheets
 
-**Retrieve Sheets**
+Retrieve Sheets
 
 ```python
 sheets = acc.sheets.get_sheets(project_id="your_project_id", follow_pagination=True)
 ```
 
-**Batch Update Sheets**
+Batch Update Sheets
 
 ```python
 updated_sheets = acc.sheets.batch_update_sheets(
@@ -728,7 +728,7 @@ updated_sheets = acc.sheets.batch_update_sheets(
 )
 ```
 
-**Batch Delete Sheets**
+Batch Delete Sheets
 
 ```python
 acc.sheets.batch_delete_sheets(
@@ -741,7 +741,7 @@ acc.sheets.batch_delete_sheets(
 
 Export sheets as PDF files.
 
-**Create Export Job**
+Create Export Job
 
 ```python
 export_job = acc.sheets.export_sheets(
@@ -751,7 +751,7 @@ export_job = acc.sheets.export_sheets(
 )
 ```
 
-**Check Export Status**
+Check Export Status
 
 ```python
 export_status = acc.sheets.get_export_status(
@@ -764,13 +764,13 @@ export_status = acc.sheets.get_export_status(
 
 Collections organize sheets within a project.
 
-**Retrieve All Collections**
+Retrieve All Collections
 
 ```python
 collections = acc.sheets.get_collections(project_id="your_project_id", follow_pagination=True)
 ```
 
-**Retrieve a Specific Collection**
+Retrieve a Specific Collection
 
 ```python
 collection = acc.sheets.get_collection(
@@ -1081,7 +1081,7 @@ The scopes and token types needed by API:
 
 This project is licensed under the MIT License - see below for details:
 
-```
+```text
 MIT License
 
 Copyright (c) 2024 Daniel Byrne
