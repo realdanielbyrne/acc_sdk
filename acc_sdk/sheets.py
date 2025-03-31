@@ -5,6 +5,26 @@ from .base import AccBase
 
 
 class AccSheetsApi:
+    """
+    This class provides methods to interact with the Sheets API of the Autodesk Construction Cloud.
+    It supports operations for managing version sets, sheets, collections, and exports.
+
+    Example:
+        ```python
+        from accapi import Acc
+        acc = Acc(auth_client=auth_client, account_id=ACCOUNT_ID)
+        
+        # Get all sheets in a project
+        sheets = acc.sheets.get_sheets(project_id="your_project_id")
+        
+        # Create a version set
+        version_set = acc.sheets.create_version_set(
+            project_id="your_project_id",
+            issuance_date="2024-03-25",
+            name="Version Set 1"
+        )
+        ```
+    """
     def __init__(self, base: AccBase):
         self.base_url = "https://developer.api.autodesk.com/construction/sheets/v1"
         self.base = base
@@ -24,6 +44,17 @@ class AccSheetsApi:
 
         Returns:
             dict: The created version set
+
+        Example:
+            ```python
+            # Create a new version set
+            version_set = acc.sheets.create_version_set(
+                project_id="your_project_id",
+                issuance_date="2024-03-25",
+                name="Initial Version Set"
+            )
+            print(version_set["id"])  # Print the new version set ID
+            ```
         """
         token = self.base.get_private_token()
         # Validate issuance_date
@@ -67,6 +98,24 @@ class AccSheetsApi:
 
         Returns:
             list: An array of version sets
+
+        Example:
+            ```python
+            # Get all version sets
+            version_sets = acc.sheets.get_version_sets(project_id="your_project_id")
+            
+            # Get version sets with pagination
+            version_sets = acc.sheets.get_version_sets(
+                project_id="your_project_id",
+                query_params={"limit": 10, "offset": 0}
+            )
+            
+            # Get version sets filtered by date
+            version_sets = acc.sheets.get_version_sets(
+                project_id="your_project_id",
+                query_params={"filter[issuanceDate]": "2024-03-25"}
+            )
+            ```
         """
             
         token = self.base.get_private_token()
@@ -100,6 +149,17 @@ class AccSheetsApi:
 
         Returns:
             None
+
+        Example:
+            ```python
+            # Update a version set
+            acc.sheets.patch_version_set(
+                project_id="your_project_id",
+                version_set_id="version_set_uuid",
+                issuance_date="2024-03-26",
+                name="Updated Version Set"
+            )
+            ```
         """
         token = self.base.get_private_token()
         # Validate issuance_date
@@ -143,6 +203,16 @@ class AccSheetsApi:
 
         Returns:
             list: An array of version sets
+
+        Example:
+            ```python
+            # Get multiple version sets by their IDs
+            version_sets = acc.sheets.batch_get_version_sets(
+                project_id="your_project_id",
+                ids=["version_set_uuid_1", "version_set_uuid_2"]
+            )
+            print(version_sets)  # Print the retrieved version sets
+            ```
         """
         
         token = self.base.get_private_token()
@@ -181,6 +251,15 @@ class AccSheetsApi:
 
         Returns:
             None
+
+        Example:
+            ```python
+            # Delete a version set
+            acc.sheets.delete_version_set(
+                project_id="your_project_id",
+                version_set_id="version_set_uuid"
+            )
+            ```
         """
         token = self.base.get_private_token()
 
@@ -210,6 +289,15 @@ class AccSheetsApi:
 
         Returns:
             None
+
+        Example:
+            ```python
+            # Delete multiple version sets
+            acc.sheets.batch_delete_version_sets(
+                project_id="your_project_id",
+                ids=["version_set_uuid_1", "version_set_uuid_2"]
+            )
+            ```
         """
         token = self.base.get_private_token()
         # Validate ids
@@ -248,6 +336,16 @@ class AccSheetsApi:
 
         Returns:
             tuple: A tuple containing the bucket key and object key
+
+        Example:
+            ```python
+            # Create storage location for a file
+            bucket_key, object_key = acc.sheets.upload_file_to_autodesk(
+                project_id="your_project_id",
+                file_name="sheet.pdf"
+            )
+            print(f"Bucket key: {bucket_key}, Object key: {object_key}")
+            ```
         """
         token = self.base.get_private_token()
         url = f"{self.base_url}/projects/{project_id}/storage"
@@ -280,6 +378,16 @@ class AccSheetsApi:
         
         Returns:
             dict: The JSON response from Autodesk API containing signed URL details.
+
+        Example:
+            ```python
+            # Get signed URL for file upload
+            signed_url_info = acc.sheets.get_signed_s3_upload(
+                bucket_key="your_bucket_key",
+                object_key="your_object_key"
+            )
+            print(signed_url_info["url"])  # Print the signed URL
+            ```
         """
         token = self.base.get_private_token()
         url = f"https://developer.api.autodesk.com/oss/v2/buckets/{bucket_key}/objects/{object_key}/signeds3upload"
@@ -308,6 +416,16 @@ class AccSheetsApi:
         Raises:
             ValueError: If the file is not a PDF.
             FileNotFoundError: If the file does not exist.
+
+        Example:
+            ```python
+            # Upload a PDF file
+            status_code = acc.sheets.upload_pdf_to_signed_url(
+                signed_url="https://signed-url.example.com",
+                file_path="/path/to/your/sheet.pdf"
+            )
+            print(f"Upload status code: {status_code}")
+            ```
         """
         if not file_path.lower().endswith(".pdf"):
             raise ValueError("Only PDF files are accepted")
@@ -335,6 +453,17 @@ class AccSheetsApi:
         
         Returns:
             dict: The JSON response from Autodesk API confirming completion.
+
+        Example:
+            ```python
+            # Complete the S3 upload
+            upload_response = acc.sheets.complete_s3_upload(
+                bucket_key="your_bucket_key",
+                object_key="your_object_key",
+                upload_key="your_upload_key"
+            )
+            print(upload_response)  # Print the completion response
+            ```
         """
         token = self.base.get_private_token()
         url = f"https://developer.api.autodesk.com/oss/v2/buckets/{bucket_key}/objects/{object_key}/signeds3upload"
@@ -368,6 +497,24 @@ class AccSheetsApi:
         
         Raises:
             ValueError: If file data fails validation.
+
+        Example:
+            ```python
+            # Create uploads for a version set
+            files = [
+                {
+                    "storageType": "OSS",
+                    "storageUrn": "urn:adsk.objects:os.object:your-bucket/your-object",
+                    "name": "Sheet1.pdf"
+                }
+            ]
+            upload_response = acc.sheets.post_uploads(
+                project_id="your_project_id",
+                version_set_id="version_set_uuid",
+                files=files
+            )
+            print(upload_response)  # Print the upload response
+            ```
         """
         token = self.base.get_private_token()
         # Validate files
@@ -415,6 +562,30 @@ class AccSheetsApi:
 
         Returns:
             list: An array of sheets.
+
+        Example:
+            ```python
+            # Get all sheets
+            sheets = acc.sheets.get_sheets(project_id="your_project_id")
+            
+            # Get sheets with pagination
+            sheets = acc.sheets.get_sheets(
+                project_id="your_project_id",
+                follow_pagination=True
+            )
+            
+            # Get sheets from a specific version set
+            sheets = acc.sheets.get_sheets(
+                project_id="your_project_id",
+                query_params={"filter[versionSetId]": "version_set_uuid"}
+            )
+            
+            # Get sheets with specific fields
+            sheets = acc.sheets.get_sheets(
+                project_id="your_project_id",
+                query_params={"fields": "id,name,number"}
+            )
+            ```
         """
         
             
@@ -458,6 +629,16 @@ class AccSheetsApi:
 
         Raises:
             HTTPError: If the API request fails.
+
+        Example:
+            ```python
+            # Get multiple sheets by their IDs
+            sheets = acc.sheets.batch_get_sheets(
+                project_id="your_project_id",
+                sheet_ids=["sheet_uuid_1", "sheet_uuid_2"]
+            )
+            print(sheets)  # Print the retrieved sheets
+            ```
         """
         url = (
             f"https://developer.api.autodesk.com/construction/sheets/v1/"
@@ -496,6 +677,20 @@ class AccSheetsApi:
         
         Raises:
             requests.HTTPError: If the API response status indicates an error.
+
+        Example:
+            ```python
+            # Update multiple sheets
+            updated_sheets = acc.sheets.batch_update_sheets(
+                project_id="your_project_id",
+                ids=["sheet_uuid_1", "sheet_uuid_2"],
+                updates={
+                    "versionSetId": "new_version_set_uuid",
+                    "addTags": ["reviewed", "approved"]
+                }
+            )
+            print(updated_sheets)  # Print the updated sheets
+            ```
         """
         if len(ids) > 200:
             raise ValueError("The maximum number of sheet IDs that can be batched is 200.")
@@ -533,6 +728,15 @@ class AccSheetsApi:
         
         Raises:
             requests.HTTPError: If the API response status indicates an error.
+
+        Example:
+            ```python
+            # Delete multiple sheets
+            acc.sheets.batch_delete_sheets(
+                project_id="your_project_id",
+                ids=["sheet_uuid_1", "sheet_uuid_2"]
+            )
+            ```
         """
         if len(ids) > 200:
             raise ValueError("The maximum number of sheet IDs that can be batched is 200.")
@@ -566,6 +770,16 @@ class AccSheetsApi:
         
         Raises:
             requests.HTTPError: If the API response status indicates an error.
+
+        Example:
+            ```python
+            # Restore multiple deleted sheets
+            restored_sheets = acc.sheets.batch_restore_sheets(
+                project_id="your_project_id",
+                ids=["sheet_uuid_1", "sheet_uuid_2"]
+            )
+            print(restored_sheets)  # Print the restored sheets
+            ```
         """
         if len(ids) > 200:
             raise ValueError("The maximum number of sheet IDs that can be batched is 200.")
@@ -606,6 +820,21 @@ class AccSheetsApi:
             
         Raises:
             requests.HTTPError: If the response from the API indicates an error.
+
+        Example:
+            ```python
+            # Create an export job
+            export_job = acc.sheets.export_sheets(
+                project_id="your_project_id",
+                options={
+                    "outputFileName": "sheets_export.pdf",
+                    "standardMarkups": True,
+                    "issueMarkups": True
+                },
+                sheets=["sheet_uuid_1", "sheet_uuid_2"]
+            )
+            print(export_job["id"])  # Print the export job ID
+            ```
         """
         # Retrieve the OAuth token from the base class.
         token = self.base.get_private_token()
@@ -655,6 +884,20 @@ class AccSheetsApi:
                 
         Raises:
             requests.HTTPError: If the API response indicates an error.
+
+        Example:
+            ```python
+            # Check export job status
+            export_status = acc.sheets.get_export_status(
+                project_id="your_project_id",
+                export_id="export_job_uuid"
+            )
+            
+            if export_status["status"] == "completed":
+                print(f"Download URL: {export_status['result']['output']['url']}")
+            else:
+                print(f"Export status: {export_status['status']}")
+            ```
         """
         # Retrieve the OAuth token from the base class.
         token = self.base.get_private_token()
@@ -700,6 +943,25 @@ class AccSheetsApi:
 
         Raises:
             requests.exceptions.HTTPError: For non-successful HTTP responses.
+
+        Example:
+            ```python
+            # Get all collections
+            collections = acc.sheets.get_collections(project_id="your_project_id")
+            
+            # Get collections with pagination
+            collections = acc.sheets.get_collections(
+                project_id="your_project_id",
+                follow_pagination=True
+            )
+            
+            # Get collections with limit and offset
+            collections = acc.sheets.get_collections(
+                project_id="your_project_id",
+                offset=0,
+                limit=10
+            )
+            ```
         """
         # Retrieve the private token from the base class.
         token = self.base.get_private_token()
@@ -754,6 +1016,16 @@ class AccSheetsApi:
 
         Raises:
             requests.exceptions.HTTPError: For non-successful HTTP responses.
+
+        Example:
+            ```python
+            # Get a specific collection
+            collection = acc.sheets.get_collection(
+                project_id="your_project_id",
+                collection_id="collection_uuid"
+            )
+            print(collection["name"])  # Print collection name
+            ```
         """
         # Retrieve the private token from the base class.
         token = self.base.get_private_token()
