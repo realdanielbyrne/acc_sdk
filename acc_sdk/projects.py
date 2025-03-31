@@ -6,8 +6,25 @@ class AccProjectsApi:
     This class provides methods to interact with the project endpoint of the Autodesk Construction Cloud API.
     The get methods require account:read and the post, and patch methods require account:write scopes.
 
-    Token must be Bearer <token>, where <token> is is obtained via either a two-legged or three-legged OAuth flow
-    for the GET and POST methods.  The Patch method requires a 2-legged token.
+    Token must be Bearer <token>, where <token> is obtained via either a two-legged or three-legged OAuth flow
+    for the GET and POST methods. The Patch method requires a 2-legged token.
+
+    Example:
+        ```python
+        from accapi import Acc
+        acc = Acc(auth_client=auth_client, account_id=ACCOUNT_ID)
+        
+        # Get all projects
+        projects = acc.projects.get_projects()
+        
+        # Create a new project
+        new_project = {
+            "name": "My Project",
+            "type": "Wall Construction",
+            "jobNumber": "12345"
+        }
+        created_project = acc.projects.post_project(new_project)
+        ```
     '''    
     def __init__(self, base: AccBase):
         self.base_url = "https://developer.api.autodesk.com/construction/admin/v1"
@@ -25,6 +42,13 @@ class AccProjectsApi:
 
         Returns:
             dict: project object
+
+        Example:
+            ```python
+            # Get a specific project by ID
+            project = acc.projects.get_project(project_id="your_project_uuid")
+            print(project["name"])  # Print project name
+            ```
         """
         token = f"Bearer {self.base.get_private_token()}"
 
@@ -56,6 +80,28 @@ class AccProjectsApi:
 
         Returns:
             list: The list of projects (results array) from the API response.
+
+        Example:
+            ```python
+            # Get all projects
+            projects = acc.projects.get_projects()
+            
+            # Get projects with specific fields
+            projects = acc.projects.get_projects(
+                filter_params={'fields': "accountId,name,jobNumber"}
+            )
+            
+            # Get projects with pagination
+            projects = acc.projects.get_projects(
+                filter_params={'limit': 50},
+                follow_pagination=True
+            )
+            
+            # Get projects with status filter
+            active_projects = acc.projects.get_projects(
+                filter_params={'filter[status]': 'active'}
+            )
+            ```
         """        
         token = f"Bearer {self.base.get_private_token()}"
 
@@ -99,6 +145,23 @@ class AccProjectsApi:
 
         Returns:
             list: a list of active projects filtered by the filter parameters.
+
+        Example:
+            ```python
+            # Get all active projects
+            active_projects = acc.projects.get_active_projects()
+            
+            # Get active projects with specific fields
+            active_projects = acc.projects.get_active_projects(
+                filter_params={'fields': "name,jobNumber,type"}
+            )
+            
+            # Get active projects with pagination
+            active_projects = acc.projects.get_active_projects(
+                filter_params={'limit': 10},
+                follow_pagination=True
+            )
+            ```
         """
         if filter_params is None:
             filter_params = {}
@@ -113,6 +176,25 @@ class AccProjectsApi:
 
         Returns:
             list: a list of active projects filtered by the filter parameters.
+
+        Example:
+            ```python
+            # Get all active projects
+            active_projects = acc.projects.get_all_active_projects()
+            
+            # Get all active projects with specific fields
+            active_projects = acc.projects.get_all_active_projects(
+                filter_params={'fields': "name,jobNumber,type,status"}
+            )
+            
+            # Get all active projects with additional filters
+            filtered_projects = acc.projects.get_all_active_projects(
+                filter_params={
+                    'fields': "name,jobNumber,type",
+                    'filter[type]': 'Wall Construction'
+                }
+            )
+            ```
         """        
         if filter_params is None:
             filter_params = {}
@@ -132,6 +214,31 @@ class AccProjectsApi:
 
         Returns:
             dict: The created project object.
+
+        Example:
+            ```python
+            # Create a new project
+            new_project = {
+                "name": "My Project",
+                "type": "Wall Construction",
+                "jobNumber": "12345",
+                "latitude": "34.7749",
+                "longitude": "-125.4194",
+                "timezone": "America/Chicago"
+            }
+            created_project = acc.projects.post_project(new_project)
+            
+            # Create a project from a template
+            template_project = {
+                "name": "Template Project",
+                "type": "Wall Construction",
+                "jobNumber": "12346",
+                "template": {
+                    "projectId": "template-uuid"
+                }
+            }
+            created_template_project = acc.projects.post_project(template_project)
+            ```
         """
         token = f"Bearer {self.base.get_private_token()}"
 
