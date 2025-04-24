@@ -44,7 +44,7 @@ AccSdk currently implements the following Autodesk Construction Cloud APIs:
 - The Sheets API provides methods to manage sheets and version sets, as well as uploading, publishing, and exporting sheets as PDFs.
 - The User Profile API provides a method for gathering profile information from the logged-in user.
 - The Photos API provides methods to retrieve and search for photos.
-- The Data Connector API provides methods to initiate and manage bulk data downloads from Autodesk Construction Cloud.
+- The Data Connector API provides methods to initiate and manage bulk data downloads which can then be used in analysis tools like PowerBI and Tableau.
 
 ## Contributing
 
