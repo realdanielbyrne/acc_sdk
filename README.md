@@ -1,5 +1,8 @@
 # AccSdk - Autodesk Construction Cloud Software Development Kit
 
+The Autodesk Construction Cloud SDK, AccSdk, is a Python SDK that helps developers
+create applications that leverage the [Autodesk Construction Cloud API](https://aps.autodesk.com/developer/overview/autodesk-construction-cloud).
+
 [![PyPI version](https://badge.fury.io/py/acc_sdk.svg)](https://badge.fury.io/py/acc_sdk)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
