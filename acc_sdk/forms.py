@@ -3,8 +3,9 @@ import requests
 from datetime import date, timedelta
 from .base import AccBase
 
+
 class AccFormsApi:
-    '''
+    """
     This class provides methods to interact with the Forms endpoint of the Autodesk Construction Cloud API.
     The GET methods require data:read and the POST, PATCH, and PUT methods require data:write scope.
 
@@ -15,10 +16,10 @@ class AccFormsApi:
         ```python
         from accapi import Acc
         acc = Acc(auth_client=auth_client, account_id=ACCOUNT_ID)
-        
+
         # Get all forms in a project
         forms = acc.forms.get_forms(project_id="your_project_id")
-        
+
         # Create a new form
         new_form = acc.forms.post_form(
             project_id="your_project_id",
@@ -26,14 +27,68 @@ class AccFormsApi:
             data={"customValues": {"field1": "value1"}}
         )
         ```
-    '''       
+    """
+
     def __init__(self, base: AccBase):
-        self.base = base        
+        self.base = base
         self.base_url = "https://developer.api.autodesk.com/construction/forms/v1"
 
-    def get_forms(self, project_id, offset=0, limit=50, ids=None, formDateMin=None,
-                  formDateMax=None, updatedAfter=None, updatedBefore=None, templateId=None,
-                  statuses=None, sortBy=None, sortOrder=None, locationIds=None, follow_pagination=False)->list[dict]:
+    def _get_headers(self):
+        """
+        Constructs the headers required for API requests.
+
+        Returns:
+            dict: A dictionary containing the headers.
+        """
+        token = f"Bearer {self.base.get_3leggedToken()}"
+        return {"Authorization": token, "Content-Type": "application/json"}
+
+    def _handle_pagination(self, url, headers, params=None):
+        """
+        Handles pagination for API requests.
+
+        Args:
+            url (str): The initial URL for the API request.
+            headers (dict): The headers for the API request.
+            params (dict, optional): Query parameters for the API request.
+
+        Returns:
+            list: A list of results from all pages.
+        """
+        results = []
+        while url:
+            response = requests.get(url, headers=headers, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            # Extend the results with the data from this page
+            results.extend(data.get("data", []))
+
+            # Get the next URL for pagination
+            url = data.get("pagination", {}).get("nextUrl")
+
+            # Clear params for subsequent requests using the pagination URL
+            params = None
+
+        return results
+
+    def get_forms(
+        self,
+        project_id,
+        offset=0,
+        limit=50,
+        ids=None,
+        formDateMin=None,
+        formDateMax=None,
+        updatedAfter=None,
+        updatedBefore=None,
+        templateId=None,
+        statuses=None,
+        sortBy=None,
+        sortOrder=None,
+        locationIds=None,
+        follow_pagination=False,
+    ) -> list[dict]:
         """
         Returns a paginated list of forms in a project. Forms are sorted by updatedAt, most recent first.
         Returns up to 50 forms per page unless follow_pagination is True.
@@ -63,20 +118,20 @@ class AccFormsApi:
             ```python
             # Get all forms
             forms = acc.forms.get_forms(project_id="your_project_id")
-            
+
             # Get forms with pagination
             forms = acc.forms.get_forms(
                 project_id="your_project_id",
                 follow_pagination=True
             )
-            
+
             # Get forms filtered by date range
             forms = acc.forms.get_forms(
                 project_id="your_project_id",
                 formDateMin="2024-01-01T00:00:00Z",
                 formDateMax="2024-03-25T23:59:59Z"
             )
-            
+
             # Get forms by template and status
             forms = acc.forms.get_forms(
                 project_id="your_project_id",
@@ -84,22 +139,18 @@ class AccFormsApi:
                 statuses="draft,inReview"
             )
             ```
-        """        
-        # Remove the "b." prefix if present.
+        """
         if project_id.startswith("b."):
             project_id = project_id[2:]
-        
-        # Build the initial URL
+
         url = f"{self.base_url}/projects/{project_id}/forms"
-        
-        # Build the query parameters dictionary
         params = {
             "offset": offset,
             "limit": limit,
         }
         if limit > 50:
             raise ValueError("The maximum limit is 50.")
-        
+
         if ids is not None:
             params["ids"] = ids
         if formDateMin is not None:
@@ -119,38 +170,32 @@ class AccFormsApi:
         if sortOrder is not None:
             params["sortOrder"] = sortOrder
         if locationIds is not None:
-            # Autodesk expects multiple location parameters as individual query parameters.
             params["locationId"] = locationIds
 
-        headers = {"Authorization": f"Bearer {self.base.get_3leggedToken()}"}
+        headers = self._get_headers()
 
-        all_forms = []        
-        current_params = params
+        if follow_pagination:
+            return self._handle_pagination(url, headers, params)
 
-        while url:
-            response = requests.get(url, headers=headers, params=current_params)
-            response.raise_for_status()
-            json_data = response.json()
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        return response.json().get("data", [])
 
-            # Extend the list with the forms data from this page.
-            all_forms.extend(json_data.get("data", []))
-
-            # Get pagination info
-            pagination = json_data.get("pagination", {})
-            url = pagination.get("nextUrl") if follow_pagination else None
-
-            # For subsequent requests, use the next_url which already includes query parameters.
-            current_params = {}
-
-        return all_forms
-
-    def get_templates(self, project_id, offset=0, limit=50, updatedAfter=None,
-                      updatedBefore=None, sortOrder=None, follow_pagination=False)->list[dict]:
+    def get_templates(
+        self,
+        project_id,
+        offset=0,
+        limit=50,
+        updatedAfter=None,
+        updatedBefore=None,
+        sortOrder=None,
+        follow_pagination=False,
+    ) -> list[dict]:
         """
         Retrieve all form templates for a given project by following pagination.
-        
+
         https://aps.autodesk.com/en/docs/acc/v1/reference/http/forms-form-templates-GET/
-        
+
         Args:
             project_id (str): The project ID (will remove a leading "b." if present).
             offset (int): Number of records to skip (defaults to 0).
@@ -166,13 +211,13 @@ class AccFormsApi:
             ```python
             # Get all templates
             templates = acc.forms.get_templates(project_id="your_project_id")
-            
+
             # Get templates with pagination
             templates = acc.forms.get_templates(
                 project_id="your_project_id",
                 follow_pagination=True
             )
-            
+
             # Get recently updated templates
             templates = acc.forms.get_templates(
                 project_id="your_project_id",
@@ -181,14 +226,10 @@ class AccFormsApi:
             )
             ```
         """
-        # Remove the "b." prefix from the project_id if it exists.
         if project_id.startswith("b."):
             project_id = project_id[2:]
 
-        # Build the initial URL for the form templates endpoint.
         url = f"{self.base_url}/projects/{project_id}/form-templates"
-
-        # Build the query parameters.
         params = {
             "offset": offset,
             "limit": limit,
@@ -202,30 +243,16 @@ class AccFormsApi:
         if sortOrder is not None:
             params["sortOrder"] = sortOrder
 
-        headers = {"Authorization": f"Bearer {self.base.get_3leggedToken()}"}
+        headers = self._get_headers()
 
-        all_templates = []        
-        current_params = params
+        if follow_pagination:
+            return self._handle_pagination(url, headers, params)
 
-        while url:
-            response = requests.get(url, headers=headers, params=current_params)
-            response.raise_for_status()
-            json_data = response.json()
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        return response.json().get("data", [])
 
-            # Add the templates from this page to the list.
-            all_templates.extend(json_data.get("data", []))
-
-            # Follow the pagination link if available.
-            pagination = json_data.get("pagination", {})
-            url = pagination.get("nextUrl") if follow_pagination else None
-            if not url:
-                break
-
-            current_params = {}
-
-        return all_templates
-
-    def get_forms_for_past30(self, project_id, **kwargs)->list[dict]:
+    def get_forms_for_past30(self, project_id, **kwargs) -> list[dict]:
         """
         Retrieve forms for a given project that were created within teh past 30 days.
 
@@ -240,7 +267,7 @@ class AccFormsApi:
             ```python
             # Get forms from the past 30 days
             recent_forms = acc.forms.get_forms_for_past30(project_id="your_project_id")
-            
+
             # Get forms from the past 30 days with additional filters
             recent_forms = acc.forms.get_forms_for_past30(
                 project_id="your_project_id",
@@ -253,14 +280,14 @@ class AccFormsApi:
         date_minus_30 = today - timedelta(days=30)
 
         # Format the date as 'yyyy-mm-dd'
-        formDateMin = date_minus_30.strftime('%Y-%m-%d')
+        formDateMin = date_minus_30.strftime("%Y-%m-%d")
 
         return self.get_forms(project_id, formDateMin=formDateMin, **kwargs)
 
-    def post_form(self, project_id:str, template_id:str, data:dict)->dict:
+    def post_form(self, project_id: str, template_id: str, data: dict) -> dict:
         """
         Adds a new form to a project.
-        
+
         https://aps.autodesk.com/en/docs/acc/v1/reference/http/forms-forms-POST/
 
         Args:
@@ -294,23 +321,27 @@ class AccFormsApi:
             print(new_form["id"])  # Print the new form ID
             ```
         """
-        url = f"{self.base_url}/projects/{project_id}/form-templates/{template_id}/forms"
+        url = (
+            f"{self.base_url}/projects/{project_id}/form-templates/{template_id}/forms"
+        )
 
-        headers = {"Authorization": f"Bearer {self.base.get_3leggedToken()}", "Content-Type": "application/json"}
+        headers = self._get_headers()
         response = requests.post(url, headers=headers, json=data)
         response.raise_for_status()
         return response.json()
 
-    def patch_form(self, project_id:str, template_id:str, form_id:str, data:dict)->dict:
+    def patch_form(
+        self, project_id: str, template_id: str, form_id: str, data: dict
+    ) -> dict:
         """
         Updates a form's form details. Note that we do not currently support updating PDF forms.
 
         To edit a form, it must be in draft or inReview status and the user must have permissions to edit the form.
-        
+
         https://aps.autodesk.com/en/docs/acc/v1/reference/http/forms-forms-formId-PATCH/
 
         Args:
-            project_id (str): The project ID from GET forms.            
+            project_id (str): The project ID from GET forms.
             template_id (str): The form template ID from GET forms.
             form_id (str): The form ID from GET forms.
             data (dict): The form data split into customValues(non-tabular fields) and tabularValues(tabular fields).
@@ -337,21 +368,20 @@ class AccFormsApi:
         """
         url = f"{self.base_url}/projects/{project_id}/form-templates/{template_id}/forms/{form_id}"
 
-        headers = {"Authorization":f"Bearer {self.base.get_3leggedToken()}", 
-                   "Content-Type": "application/json"}
+        headers = self._get_headers()
         response = requests.patch(url, headers=headers, json=data)
         response.raise_for_status()
         return response.json()
 
-    def put_form(self, project_id:str, form_id:str, data:dict)->dict:
+    def put_form(self, project_id: str, form_id: str, data: dict) -> dict:
         """
         Updates a form's main form fields, both tabular and non-tabular. Note that we do not currently support updating PDF forms.
-        To edit form values, the form needs to be in draft status and the user must have permissions to edit the form. 
-        
+        To edit form values, the form needs to be in draft status and the user must have permissions to edit the form.
+
         https://aps.autodesk.com/en/docs/acc/v1/reference/http/forms-forms-formId-PUT/
 
         Args:
-            project_id (str): The project ID from GET forms.            
+            project_id (str): The project ID from GET forms.
             data (dict): The form data split into customValues(non-tabular fields) and tabularValues(tabular fields).
 
         Returns:
@@ -379,10 +409,11 @@ class AccFormsApi:
             print(updated_form)  # Print the updated form data
             ```
         """
-        url = f"{self.base_url}/projects/{project_id}/forms/{form_id}/values:batch-update"
+        url = (
+            f"{self.base_url}/projects/{project_id}/forms/{form_id}/values:batch-update"
+        )
 
-        headers = {"Authorization":f"Bearer {self.base.get_3leggedToken()}", 
-                   "Content-Type": "application/json"}
+        headers = self._get_headers()
         response = requests.put(url, headers=headers, json=data)
         response.raise_for_status()
         return response.json()
