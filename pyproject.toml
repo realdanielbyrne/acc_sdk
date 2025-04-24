@@ -6,12 +6,18 @@ authors = [{name="Daniel Byrne", email= "realdanielbyrne@icloud.com"}]
 maintainers = [{name="Daniel Byrne", email= "realdanielbyrne@icloud.com"}]
 readme = "README.md"
 requires-python = ">= 3.12"
-version = "0.5.8"
+version = "0.5.9"
+
+[tool.setuptools.package-data]
+"acc_sdk" = ["docs/*.md"]
 [project.urls]
 repository = "https://github.com/realdanielbyrne/acc_sdk"
 
 [tool.poetry]
-
+packages = [
+    {include = "acc_sdk"},
+    {include = "docs", from = "."}
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
