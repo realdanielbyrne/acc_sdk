@@ -183,3 +183,4 @@ config.py
 *.DS_Store
 *.vscode/
 *.idea/
+.github/copilot-instructions.md

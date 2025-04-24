@@ -1,6 +1,7 @@
 import requests
 from .base import AccBase
 
+
 class AccPhotosApi:
     """
     API for interacting with photos in Autodesk Construction Cloud.
@@ -18,7 +19,7 @@ class AccPhotosApi:
         Args:
             project_id (str): Unique identifier of the project.
             photo_id (str): Unique identifier of the media.
-            include (list, optional): Extra fields to be returned for each Photo Object. 
+            include (list, optional): Extra fields to be returned for each Photo Object.
                                    Will always be: signedUrls.
 
         Returns:
@@ -51,7 +52,7 @@ class AccPhotosApi:
                 project_id="your_project_id",
                 photo_id="your_photo_id"
             )
-            
+
             # Get a photo with signed URLs
             photo = acc.photos.get_photo(
                 project_id="your_project_id",
@@ -65,20 +66,20 @@ class AccPhotosApi:
             https://aps.autodesk.com/en/docs/acc/v1/reference/http/photos-getphoto-GET/
         """
         url = f"{self.base_url}/projects/{project_id}/photos/{photo_id}"
-        headers = {
-            "Authorization": f"Bearer {self.base.get_3leggedToken()}"
-        }
-        
+        headers = {"Authorization": f"Bearer {self.base.get_3leggedToken()}"}
+
         # Build query parameters
         params = {}
         if include:
             params["include"] = ",".join(include)
-            
-        response = self.base.get(url, params=params, headers=headers)
+
+        response = requests.get(url, params=params, headers=headers)
         response.raise_for_status()
         return response.json()
 
-    def get_filtered_photos(self, project_id: str, filter_params: dict = None, include: list = None) -> dict:
+    def get_filtered_photos(
+        self, project_id: str, filter_params: dict = None, include: list = None
+    ) -> dict:
         """
         Get a filtered list of photos from a project.
 
@@ -97,7 +98,7 @@ class AccPhotosApi:
                 - updatedAt (dict): Date range filter for when photos were updated
                 - isPublic (bool): Filter by public/private status
                 - locked (bool): Filter by locked status
-            include (list, optional): Extra fields to be returned for each Photo Object. 
+            include (list, optional): Extra fields to be returned for each Photo Object.
                                    Will always be: signedUrls.
 
         Returns:
@@ -123,7 +124,7 @@ class AccPhotosApi:
                     "sortOrder": "desc"
                 }
             )
-            
+
             # Get photos with filters
             photos = acc.photos.get_filtered_photos(
                 project_id="your_project_id",
@@ -144,22 +145,18 @@ class AccPhotosApi:
             https://aps.autodesk.com/en/docs/acc/v1/reference/http/photos-getfilteredphotos-POST/
         """
         url = f"{self.base_url}/projects/{project_id}/photos/filter"
-        headers = {
-            "Authorization": f"Bearer {self.base.get_3leggedToken()}"
-        }
-        
+        headers = {"Authorization": f"Bearer {self.base.get_3leggedToken()}"}
+
         # Build request body
         body = {}
         if filter_params:
             body.update(filter_params)
-            
+
         # Build query parameters
         params = {}
         if include:
             params["include"] = ",".join(include)
-            
-        response = self.base.post(url, json=body, params=params, headers=headers)
+
+        response = requests.post(url, json=body, params=params, headers=headers)
         response.raise_for_status()
         return response.json()
-
-    
