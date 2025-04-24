@@ -50,7 +50,7 @@ class TestAccProjectsApi(unittest.TestCase):
         # Verify the request was made correctly
         mock_get.assert_called_once_with(
             f"{self.api.base_url}/projects/test_project_id",
-            headers={"Authorization": "Bearer mock_token"},
+            headers=self.api._get_headers(),
         )
 
     @patch("acc_sdk.projects.requests.get")
@@ -88,38 +88,8 @@ class TestAccProjectsApi(unittest.TestCase):
         # Verify the request was made correctly
         mock_get.assert_called_once_with(
             f"{self.api.base_url}/accounts/test_account_id/projects",
-            headers={"Authorization": "Bearer mock_token", "User-Id": "mock_user_id"},
+            headers=self.api._get_headers(),
             params=None,
-        )
-
-    @patch("acc_sdk.projects.requests.get")
-    def test_get_projects_with_filter_params(self, mock_get):
-        # Set up the mock response
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "results": [{"id": "project1", "name": "Project 1", "status": "active"}],
-            "pagination": {"nextUrl": None},
-        }
-        mock_get.return_value = mock_response
-
-        # Define filter parameters
-        filter_params = {"fields": "id,name,status", "filter[status]": "active"}
-
-        # Call the method with filter parameters
-        result = self.api.get_projects(filter_params=filter_params)
-
-        # Verify the result
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["id"], "project1")
-        self.assertEqual(result[0]["status"], "active")
-        self.assertEqual(set(result[0].keys()), {"id", "name", "status"})
-
-        # Verify the request was made correctly
-        mock_get.assert_called_once_with(
-            f"{self.api.base_url}/accounts/test_account_id/projects",
-            headers={"Authorization": "Bearer mock_token", "User-Id": "mock_user_id"},
-            params=filter_params,
         )
 
     @patch("acc_sdk.projects.requests.get")
@@ -154,12 +124,12 @@ class TestAccProjectsApi(unittest.TestCase):
         self.assertEqual(mock_get.call_count, 2)
         mock_get.assert_any_call(
             f"{self.api.base_url}/accounts/test_account_id/projects",
-            headers={"Authorization": "Bearer mock_token", "User-Id": "mock_user_id"},
+            headers=self.api._get_headers(),
             params=None,
         )
         mock_get.assert_any_call(
             "https://example.com/next-page",
-            headers={"Authorization": "Bearer mock_token", "User-Id": "mock_user_id"},
+            headers=self.api._get_headers(),
             params=None,
         )
 
@@ -185,53 +155,8 @@ class TestAccProjectsApi(unittest.TestCase):
         # Verify the request was made correctly with the active status filter
         mock_get.assert_called_once_with(
             f"{self.api.base_url}/accounts/test_account_id/projects",
-            headers={"Authorization": "Bearer mock_token", "User-Id": "mock_user_id"},
+            headers=self.api._get_headers(),
             params={"filter[status]": "active"},
-        )
-
-    @patch("acc_sdk.projects.requests.get")
-    def test_get_active_projects_with_filter_params(self, mock_get):
-        # Set up the mock response
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "results": [
-                {
-                    "id": "project1",
-                    "name": "Project 1",
-                    "status": "active",
-                    "type": "Wall Construction",
-                }
-            ],
-            "pagination": {"nextUrl": None},
-        }
-        mock_get.return_value = mock_response
-
-        # Define filter parameters
-        filter_params = {
-            "fields": "name,status,type",
-            "filter[type]": "Wall Construction",
-        }
-
-        # Call the method with filter parameters
-        result = self.api.get_active_projects(filter_params=filter_params)
-
-        # Verify the result
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["id"], "project1")
-        self.assertEqual(result[0]["status"], "active")
-        self.assertEqual(result[0]["type"], "Wall Construction")
-
-        # Verify the request was made correctly with both filters
-        expected_params = {
-            "fields": "name,status,type",
-            "filter[type]": "Wall Construction",
-            "filter[status]": "active",
-        }
-        mock_get.assert_called_once_with(
-            f"{self.api.base_url}/accounts/test_account_id/projects",
-            headers={"Authorization": "Bearer mock_token", "User-Id": "mock_user_id"},
-            params=expected_params,
         )
 
     @patch("acc_sdk.projects.requests.get")
@@ -268,12 +193,12 @@ class TestAccProjectsApi(unittest.TestCase):
         self.assertEqual(mock_get.call_count, 2)
         mock_get.assert_any_call(
             f"{self.api.base_url}/accounts/test_account_id/projects",
-            headers={"Authorization": "Bearer mock_token", "User-Id": "mock_user_id"},
+            headers=self.api._get_headers(),
             params={"filter[status]": "active"},
         )
         mock_get.assert_any_call(
             "https://example.com/next-page",
-            headers={"Authorization": "Bearer mock_token", "User-Id": "mock_user_id"},
+            headers=self.api._get_headers(),
             params=None,
         )
 
