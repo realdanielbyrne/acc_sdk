@@ -1268,6 +1268,62 @@ The scopes and token types needed by API:
   - Requires the `data:read` and `data:write` scopes
   - Requires a 3-legged token
 
+## Running Unit Tests
+
+If you have cloned this repository from GitHub, you can run the unit tests to ensure everything is working as expected. Note that the PyPI package does not include the `tests` directory, so this step is only applicable for the cloned repository.
+
+### Prerequisites
+
+- Ensure you have installed all dependencies by running:
+
+```bash
+poetry install
+```
+
+- Verify that you have Python installed (version 3.8 or higher is recommended).
+
+### Running Tests
+
+To run the unit tests, use the following command:
+
+```bash
+poetry run pytest tests/
+```
+
+This will execute all the test cases in the `tests` directory and provide a summary of the results.
+
+### Running Specific Tests
+
+If you want to run a specific test file, you can specify the path to the test file. For example:
+
+```bash
+poetry run pytest tests/test_account_users.py
+```
+
+### Viewing Detailed Test Output
+
+To view detailed output during test execution, use the `-v` flag:
+
+```bash
+poetry run pytest -v tests/
+```
+
+### Running Tests with Coverage
+
+To check the test coverage, you can use the `pytest-cov` plugin. Install it if not already installed:
+
+```bash
+poetry add --dev pytest-cov
+```
+
+Then run the tests with coverage:
+
+```bash
+poetry run pytest --cov=acc_sdk tests/
+```
+
+This will display a coverage report in the terminal.
+
 ## License
 
 This project is licensed under the MIT License - see below for details:
