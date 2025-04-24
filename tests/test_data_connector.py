@@ -1064,6 +1064,183 @@ class TestAccDataConnectorApi(unittest.TestCase):
 
         self.assertEqual(str(context.exception), "Job ID is required")
 
+    @patch("requests.get")
+    def test_get_job_data_listing(self, mock_get):
+        # Set up the mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = [
+            {
+                "name": "admin_companies.csv",
+                "createdAt": "2020-11-06T19:09:40.106Z",
+                "size": "123456",
+            },
+            {
+                "name": "admin_users.csv",
+                "createdAt": "2020-11-06T19:09:40.106Z",
+                "size": "78910",
+            },
+        ]
+        mock_get.return_value = mock_response
+
+        # Call the method
+        result = self.api.get_job_data_listing(
+            job_id="ce9bc188-1e18-11eb-adc1-0242ac120002"
+        )
+
+        # Verify the result
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]["name"], "admin_companies.csv")
+        self.assertEqual(result[0]["size"], "123456")
+        self.assertEqual(result[1]["name"], "admin_users.csv")
+        self.assertEqual(result[1]["size"], "78910")
+
+        # Verify the request was made correctly
+        mock_get.assert_called_once_with(
+            f"{self.api.base_address}/accounts/test_account_id/jobs/ce9bc188-1e18-11eb-adc1-0242ac120002/data-listing",
+            headers={"Authorization": "Bearer test_token"},
+        )
+
+    @patch("requests.get")
+    def test_get_job_data_listing_with_account_id(self, mock_get):
+        # Set up the mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = [
+            {
+                "name": "admin_companies.csv",
+                "createdAt": "2020-11-06T19:09:40.106Z",
+                "size": "123456",
+            }
+        ]
+        mock_get.return_value = mock_response
+
+        # Call the method with a custom account ID
+        result = self.api.get_job_data_listing(
+            account_id="custom_account_id",
+            job_id="ce9bc188-1e18-11eb-adc1-0242ac120002",
+        )
+
+        # Verify the result
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["name"], "admin_companies.csv")
+
+        # Verify the request was made correctly
+        mock_get.assert_called_once_with(
+            f"{self.api.base_address}/accounts/custom_account_id/jobs/ce9bc188-1e18-11eb-adc1-0242ac120002/data-listing",
+            headers={"Authorization": "Bearer test_token"},
+        )
+
+    @patch("requests.get")
+    def test_get_job_data_listing_error(self, mock_get):
+        # Set up the mock response for an error
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_response.raise_for_status.side_effect = Exception(
+            "The requested resource does not exist."
+        )
+        mock_get.return_value = mock_response
+
+        # Call the method and expect an exception
+        with self.assertRaises(Exception):
+            self.api.get_job_data_listing(job_id="nonexistent-job-id")
+
+    def test_get_job_data_listing_missing_job_id(self):
+        # Call the method without a job ID and expect an exception
+        with self.assertRaises(Exception) as context:
+            self.api.get_job_data_listing()
+
+        self.assertEqual(str(context.exception), "Job ID is required")
+
+    @patch("requests.get")
+    def test_get_job_data(self, mock_get):
+        # Set up the mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "size": "123456",
+            "name": "admin_companies.csv",
+            "signedUrl": "https://bim360dc-p-ue1-extracts.s3.amazonaws.com/data/9be6b2cd-e9e8-4861-aa45-c96668a9f6bd/d023d0cf-b603-4de9-b240-a0e8a85bbf8d/autodesk_data_extract.zip?AWSAccessKeyId=ASIAWZ7KRFT5TZSCKIYO&Expires=1604690406&Signature=cb5HR%2FthOATYIAqW41ojbfptMsM%3D&x-amz-security-token=IQoJb3JpZ2luX2VjELT%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMSJHMEUCIHQdYa9Z%2BhS3u5EmRfEoz1KFwm2xCvLK6pH1Go2q88%2BWAiEAy7KMbb%2FKBww1XWxR0B%2FepB0Syt6jOhXTahznLrCWKcYq2gEIHBACGgw0NjgxMDY0MjM1NDciDHewqYuFoS8GY2PlZCq3AZG8jsIKx5egqYARC2N%2F7%2B72nkATTV6PwomhMOsAb9eZhIBCR%2F861wvtM1%2B4gEfu8LN9gWMNI%2BvmHcWC92kC1lujXM1Klpq8KksSxN8%2Bt5aurFPwZ465iespRnEHKB7jX2KUzCVDPCpZ7NDTvcsy0TdqLU82L0p%2Bw6fTT0QhGuykRuhn%2FURLbtzVHvx4wi3R2kSEJ9DWGkAaWR96h76vCFDaC9o2VmLEjKww88YunnYKQcAqIhGEBTD2vpb9BTrgAVGy7Cavc8LDgwuoS7LBt%2FmE6iPohyfILcksPL5NYl3yvaUhYW%2FX9w1mgLgpnuEt4rcdcrUOTcOdjRFmqvA9%2FVPFXD%2FCWxzDRU6V3U%2BC1dZi5Y4lV3AfodZyhsJI9aSkX2D0xDMpuV%2FDiX0HyCCVk3awuCQDfPtlWqbMVzW9zzO5d6JBThIIxdEGq1Nwe677anh1WQGY%2Fuemcc4fyZRTx%2Br0i%2B8Z35YtR0pEKfvp7GQhV7d%2FSfh%2FYL58QMvvciH4yBqkcMba8SwDJQQV03Q%2FrQX2vqVOq%2BSFCijaXalvPjQp",
+        }
+        mock_get.return_value = mock_response
+
+        # Call the method
+        result = self.api.get_job_data(
+            job_id="ce9bc188-1e18-11eb-adc1-0242ac120002",
+            file_name="admin_companies.csv",
+        )
+
+        # Verify the result
+        self.assertEqual(result["size"], "123456")
+        self.assertEqual(result["name"], "admin_companies.csv")
+        self.assertTrue("signedUrl" in result)
+        self.assertTrue(result["signedUrl"].startswith("https://"))
+
+        # Verify the request was made correctly
+        mock_get.assert_called_once_with(
+            f"{self.api.base_address}/accounts/test_account_id/jobs/ce9bc188-1e18-11eb-adc1-0242ac120002/data/admin_companies.csv",
+            headers={"Authorization": "Bearer test_token"},
+        )
+
+    @patch("requests.get")
+    def test_get_job_data_with_account_id(self, mock_get):
+        # Set up the mock response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "size": "123456",
+            "name": "admin_companies.csv",
+            "signedUrl": "https://example.com/signed-url",
+        }
+        mock_get.return_value = mock_response
+
+        # Call the method with a custom account ID
+        result = self.api.get_job_data(
+            account_id="custom_account_id",
+            job_id="ce9bc188-1e18-11eb-adc1-0242ac120002",
+            file_name="admin_companies.csv",
+        )
+
+        # Verify the result
+        self.assertEqual(result["name"], "admin_companies.csv")
+        self.assertEqual(result["signedUrl"], "https://example.com/signed-url")
+
+        # Verify the request was made correctly
+        mock_get.assert_called_once_with(
+            f"{self.api.base_address}/accounts/custom_account_id/jobs/ce9bc188-1e18-11eb-adc1-0242ac120002/data/admin_companies.csv",
+            headers={"Authorization": "Bearer test_token"},
+        )
+
+    @patch("requests.get")
+    def test_get_job_data_error(self, mock_get):
+        # Set up the mock response for an error
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_response.raise_for_status.side_effect = Exception(
+            "The requested resource does not exist."
+        )
+        mock_get.return_value = mock_response
+
+        # Call the method and expect an exception
+        with self.assertRaises(Exception):
+            self.api.get_job_data(
+                job_id="nonexistent-job-id", file_name="nonexistent-file.csv"
+            )
+
+    def test_get_job_data_missing_job_id(self):
+        # Call the method without a job ID and expect an exception
+        with self.assertRaises(Exception) as context:
+            self.api.get_job_data(file_name="admin_companies.csv")
+
+        self.assertEqual(str(context.exception), "Job ID is required")
+
+    def test_get_job_data_missing_file_name(self):
+        # Call the method without a file name and expect an exception
+        with self.assertRaises(Exception) as context:
+            self.api.get_job_data(job_id="ce9bc188-1e18-11eb-adc1-0242ac120002")
+
+        self.assertEqual(str(context.exception), "File name is required")
+
 
 if __name__ == "__main__":
     unittest.main()

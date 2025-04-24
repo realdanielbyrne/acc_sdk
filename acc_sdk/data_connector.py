@@ -659,3 +659,112 @@ class AccDataConnectorApi:
             return response.json()
         else:
             response.raise_for_status()
+
+    ###########################################################################
+    # Data
+    ###########################################################################
+
+    def get_job_data_listing(self, account_id=None, job_id=None):
+        """
+        Returns an array of information about the files contained within the data extract created by a specified job.
+        The job must be spawned by a data request that was created by the authenticated user.
+        The user must have executive overview or project administrator permissions.
+
+        https://aps.autodesk.com/en/docs/acc/v1/reference/http/data-connector-jobs-jobId-data-listing-GET/
+
+        Args:
+            account_id (str, optional): The account ID. If not provided, uses the account ID from the base class.
+            job_id (str): The ID of the job to retrieve data listing for.
+
+        Returns:
+            list: An array of file information objects, each containing name, createdAt, and size.
+
+        Example:
+            ```python
+            # Get data listing for a specific job
+            data_listing = acc.data_connector.get_job_data_listing(job_id="ce9bc188-1e18-11eb-adc1-0242ac120002")
+            for file_info in data_listing:
+                print(f"File: {file_info['name']}, Size: {file_info['size']} bytes, Created: {file_info['createdAt']}")
+            ```
+        """
+        if not account_id:
+            account_id = self.base.account_id
+
+        if not account_id:
+            raise Exception("Account ID is required")
+
+        if not job_id:
+            raise Exception("Job ID is required")
+
+        url = f"{self.base_address}/accounts/{account_id}/jobs/{job_id}/data-listing"
+
+        headers = {
+            "Authorization": f"Bearer {self.base.get_3leggedToken()}",
+        }
+
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            response.raise_for_status()
+
+    def get_job_data(self, account_id=None, job_id=None, file_name=None):
+        """
+        Returns a signed URL that you can contact to retrieve a single specified file from a specified job's data extract.
+        The user must have executive overview or project administrator permissions.
+
+        https://aps.autodesk.com/en/docs/acc/v1/reference/http/data-connector-jobs-jobId-data-name-GET/
+
+        Args:
+            account_id (str, optional): The account ID. If not provided, uses the account ID from the base class.
+            job_id (str): The ID of the job to retrieve data from.
+            file_name (str): The name of the file to retrieve from the data extract.
+
+        Returns:
+            dict: An object containing the file size, name, and a signed URL for downloading the file.
+                 The signed URL is valid for 60 seconds.
+
+        Example:
+            ```python
+            # Get a signed URL for downloading a specific file from a job's data extract
+            file_info = acc.data_connector.get_job_data(
+                job_id="ce9bc188-1e18-11eb-adc1-0242ac120002",
+                file_name="admin_companies.csv"
+            )
+            print(f"File: {file_info['name']}, Size: {file_info['size']} bytes")
+            print(f"Download URL (valid for 60 seconds): {file_info['signedUrl']}")
+
+            # To download the file using the signed URL:
+            import requests
+            response = requests.get(file_info['signedUrl'])
+            with open(file_info['name'], 'wb') as f:
+                f.write(response.content)
+            ```
+        """
+        if not account_id:
+            account_id = self.base.account_id
+
+        if not account_id:
+            raise Exception("Account ID is required")
+
+        if not job_id:
+            raise Exception("Job ID is required")
+
+        if not file_name:
+            raise Exception("File name is required")
+
+        url = (
+            f"{self.base_address}/accounts/{account_id}/jobs/{job_id}/data/{file_name}"
+        )
+
+        headers = {
+            "Authorization": f"Bearer {self.base.get_3leggedToken()}",
+        }
+
+        response = requests.get(url, headers=headers)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            response.raise_for_status()
