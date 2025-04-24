@@ -44,6 +44,7 @@ AccSdk currently implements the following Autodesk Construction Cloud APIs:
 - The Sheets API provides methods to manage sheets and version sets, as well as uploading, publishing, and exporting sheets as PDFs.
 - The User Profile API provides a method for gathering profile information from the logged-in user.
 - The Photos API provides methods to retrieve and search for photos.
+- The Data Connector API provides methods to initiate and manage bulk data downloads from Autodesk Construction Cloud.
 
 ## Contributing
 
@@ -65,7 +66,6 @@ The following services are planned for future implementation:
 - The AutoSpecs API
 - The Assets API
 - The Cost Management API
-- The Data Connector API
 - The Files (Document Management) API
 - The Issues API
 - The Model Coordination API
@@ -107,7 +107,7 @@ manages the tokens and their liftimes. The Authentication module class provides 
 The initialization of the `Authentication` class requires the following parameters:
 
 - `session`: A Flask session or a Python dictionary that is used to store the tokens and other session-related data.
-- `client_id`: The Client ID of your application. This is provided by Autodesk when you register your application.  
+- `client_id`: The Client ID of your application. This is provided by Autodesk when you register your application.
 - `client_secret`: The client secret of your application. This is also provided by Autodesk when you register your application. Optional if you are using PKCE.
 - `admin_email`: The email address of the token holder user. Optional for 2-legged. Used for user_impersonation.
 - `callback_url`: The callback URL that Autodesk will redirect to after the user has authenticated. Required for the 3-legged flow.
@@ -130,9 +130,9 @@ CLIENT_SECRET =  os.environ.get('AUTODESK_CLIENT_SECRET_WEB_APP')
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
 
 
-auth_client = Authentication( session={}, client_id=CLIENT_ID, client_secret=CLIENT_SECRET, admin_email="youremail@adomain.com")  
+auth_client = Authentication( session={}, client_id=CLIENT_ID, client_secret=CLIENT_SECRET, admin_email="youremail@adomain.com")
 
-# Define the scopes you want your token holder to have, 
+# Define the scopes you want your token holder to have,
 
 scopes = [
             "user-profile:read",
@@ -141,7 +141,7 @@ scopes = [
             "data:write",
             "account:read",
             "account:write"
-            ] 
+            ]
 
 # Optionaly query the OpenID Connect Discovery Document to get the API's supported scopes
 scopes = auth_client.get_oidc_spec()
@@ -162,7 +162,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SESSION_KEY") 
+app.secret_key = os.environ.get("FLASK_SESSION_KEY")
 CLIENT_ID = os.environ.get("AUTODESK_CLIENT_ID_WEB_APP")
 CLIENT_SECRET = os.environ.get("AUTODESK_CLIENT_SECRET_WEB_APP")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
@@ -171,7 +171,7 @@ ACCOUNT_ID = os.environ.get("AUTODESK_ACCOUNT_ID")
 SCOPES = [ "user-profile:read","user:read","user:write","viewables:read","data:read","data:write","data:create","account:read","account:write"]
 
 @app.route("/", methods=["GET"])
-def index():    
+def index():
     return render_template("index.html")
 
 @app.route("/login", methods=["POST"])
@@ -183,7 +183,7 @@ def login():
     email = request.form.get("email")
     session["user_email"] = email
     auth = Authentication(client_id=CLIENT_ID,client_secret=CLIENT_SECRET, session["user_email"], CALLBACK_URL)
-    
+
     authorization_url = auth.get_authorization_url(scopes=SCOPES)
     return redirect(authorization_url)
 
@@ -197,7 +197,7 @@ def callback():
     if not code:
         return "No authorization code received.", 400
 
-    # Rebuild the Authentication object from the session to retain the same user context 
+    # Rebuild the Authentication object from the session to retain the same user context
     auth = Authentication(session,CLIENT_ID,CLIENT_SECRET, session["user_email"], CALLBACK_URL)
 
     # Exchange the code for an access token
@@ -210,8 +210,8 @@ def callback():
 @app.route("/dashboard", methods=["GET"])
 def dashboard():
     """ Final destination of 3 legged Authenticatin flow. """
-    
-    # Rebuild the Authentication object from the session to retain the same user context 
+
+    # Rebuild the Authentication object from the session to retain the same user context
     auth = Authentication(session,CLIENT_ID,CLIENT_SECRET, session["user_email"], CALLBACK_URL)
 
     # Build an ACC instance (accapi) with the user's authentication context
@@ -220,7 +220,7 @@ def dashboard():
 
 def run():
     app.run(debug=True)
-    
+
 if __name__ == "__main__":
     run()
 
@@ -362,8 +362,8 @@ print(projects[0])
 Here we show how to get active projects with a specific status, and limit the metadata fields returned.
 
 ```python
-active_build_projects_params = {    
-    'fields': 'name,jobNumber,type,status',    
+active_build_projects_params = {
+    'fields': 'name,jobNumber,type,status',
     'filter[status]': 'active',
     'filterTextMatch': 'equals'
 }
@@ -381,8 +381,8 @@ name must be unique even among deleted projects since they are not actually dele
 ```python
 test_project = {
         "jobNumber": "9999W",
-        "name": "My unique project name",        
-        "type": "Wall Construction",        
+        "name": "My unique project name",
+        "type": "Wall Construction",
         "latitude": "34.7749",
         "longitude": "-125.4194",
         "timezone":"America/Chicago"
@@ -395,7 +395,7 @@ new_project = acc.projects.post_project(test_project)
 ```python
 def get_active_projects():
   jobs_dict = get_active_jobs_from_your_db()
-  
+
   # map project types to template ids
   template_mapping = {
     'ProjectType1': {'projectId': 'c506442f-0ba5-4d9d-9ff8-70e0b02935b1'},
@@ -405,14 +405,14 @@ def get_active_projects():
   }
   for project in result:
     project['template'] = template_mapping.get(project['type'])
-  
+
   return result
 
 def create_projects(projects):
   if projects is None or len(projects) == 0:
     return
   for project in projects:
-    project['id'] = acc.projects.post_project(project)        
+    project['id'] = acc.projects.post_project(project)
   return projects
 
 jobs = get_active_projects()
@@ -924,6 +924,191 @@ updated_company = acc.companies.update_company_image(
 )
 ```
 
+### Using the Data Connector API
+
+The `AccDataConnectorApi` class provides methods to initiate and manage bulk data downloads from Autodesk Construction Cloud (ACC). This API allows you to create data extraction requests, manage extraction jobs, and download the resulting data files.
+This API requires a 3-legged token with the `data:read` and `data:write` scopes.
+
+#### Create a Data Request
+
+Create a new data extraction request specifying which projects and service groups to include.
+
+```python
+# Create a one-time data extraction request
+request_data = {
+    "description": "My Data Extract",
+    "isActive": True,
+    "scheduleInterval": "ONE_TIME",
+    "effectiveFrom": "2023-06-06T00:00:00.000Z",
+    "serviceGroups": ["admin", "issues"],
+    "projectIdList": ["project_uuid1", "project_uuid2"]
+}
+data_request = acc.data_connector.post_request(data=request_data)
+
+# Create a recurring data extraction request
+recurring_request = {
+    "description": "Weekly Data Extract",
+    "isActive": True,
+    "scheduleInterval": "WEEKLY",
+    "effectiveFrom": "2023-06-06T00:00:00.000Z",
+    "serviceGroups": ["admin", "issues", "photos"],
+    "projectIdList": ["project_uuid1", "project_uuid2"],
+    "sendEmail": True
+}
+data_request = acc.data_connector.post_request(data=recurring_request)
+```
+
+The `post_request` method supports various parameters:
+
+- `description`: A description of the data request
+- `isActive`: Whether the request is active
+- `scheduleInterval`: Frequency of extraction (ONE_TIME, DAILY, WEEKLY, MONTHLY)
+- `effectiveFrom`: Start date for the request
+- `serviceGroups`: List of service groups to include (admin, issues, photos, etc.)
+- `projectIdList`: List of project IDs to include (up to 50)
+- `sendEmail`: Whether to send notification emails
+
+#### Get Data Requests
+
+Retrieve data requests with optional filtering and pagination.
+
+```python
+# Get all data requests
+requests = acc.data_connector.get_requests()
+
+# Get requests with pagination and sorting
+requests = acc.data_connector.get_requests(
+    limit=10,
+    offset=0,
+    sort="desc",
+    sort_fields="createdAt,-updatedAt"
+)
+
+# Get requests with filtering
+requests = acc.data_connector.get_requests(
+    projectId="project_uuid",
+    isActive=True,
+    scheduleInterval="ONE_TIME"
+)
+
+# Get requests with date range filtering
+requests = acc.data_connector.get_requests(
+    createdAt="2023-01-01T00:00:00.000Z..2023-01-31T23:59:59.999Z"
+)
+```
+
+#### Get a Specific Data Request
+
+Retrieve details of a specific data request by ID.
+
+```python
+request = acc.data_connector.get_request(request_id="request_uuid")
+print(f"Request description: {request['description']}")
+print(f"Service groups: {', '.join(request['serviceGroups'])}")
+```
+
+#### Update a Data Request
+
+Modify an existing data request's attributes.
+
+```python
+update_data = {
+    "description": "Updated Data Extract",
+    "isActive": False,
+    "serviceGroups": ["admin", "issues", "photos"]
+}
+updated_request = acc.data_connector.patch_request(
+    request_id="request_uuid",
+    data=update_data
+)
+```
+
+#### Delete a Data Request
+
+Remove a data request that is no longer needed.
+
+```python
+success = acc.data_connector.delete_request(request_id="request_uuid")
+if success:
+    print("Request successfully deleted")
+```
+
+#### Get Extraction Jobs
+
+Retrieve information about data extraction jobs with optional filtering.
+
+```python
+# Get all jobs
+jobs = acc.data_connector.get_jobs()
+
+# Get jobs for a specific project
+jobs = acc.data_connector.get_jobs(project_id="project_uuid")
+
+# Get jobs with pagination, sorting, and filtering
+jobs = acc.data_connector.get_jobs(
+    limit=10,
+    offset=0,
+    sort="desc",
+    sort_fields="createdAt,-completedAt",
+    status="complete",
+    completionStatus="success"
+)
+
+# Get jobs with date range filtering
+jobs = acc.data_connector.get_jobs(
+    createdAt="2023-01-01T00:00:00.000Z..2023-01-31T23:59:59.999Z"
+)
+```
+
+#### Get Jobs for a Specific Request
+
+Retrieve all jobs associated with a particular data request.
+
+```python
+# Get all jobs for a specific request
+jobs = acc.data_connector.get_jobs_by_request(
+    request_id="request_uuid"
+)
+
+# Get jobs with pagination and sorting
+jobs = acc.data_connector.get_jobs_by_request(
+    request_id="request_uuid",
+    limit=10,
+    offset=0,
+    sort="desc"
+)
+```
+
+#### Get a Specific Job
+
+Retrieve details of a specific extraction job by ID.
+
+```python
+job = acc.data_connector.get_job(job_id="job_uuid")
+print(f"Job status: {job['status']}")
+print(f"Completion status: {job['completionStatus']}")
+```
+
+#### Download Extracted Data
+
+Get a signed URL for downloading a specific file from a job's data extract.
+
+```python
+# Get a signed URL for downloading a specific file
+file_info = acc.data_connector.get_job_data(
+    job_id="job_uuid",
+    file_name="admin_companies.csv"
+)
+print(f"File: {file_info['name']}, Size: {file_info['size']} bytes")
+print(f"Download URL (valid for 60 seconds): {file_info['signedUrl']}")
+
+# To download the file using the signed URL:
+import requests
+response = requests.get(file_info['signedUrl'])
+with open(file_info['name'], 'wb') as f:
+    f.write(response.content)
+```
+
 ### Using the Authentication API
 
 The `Authentication` class provides comprehensive methods to manage authentication with the Autodesk Construction Cloud (ACC) API. It supports both 2-legged and 3-legged OAuth flows, token management, and various authentication-related operations.
@@ -1075,6 +1260,9 @@ The scopes and token types needed by API:
   - Requires a 3-legged token
 - AccUserProfileApi
   - Requires the `user-profile:read` scope
+  - Requires a 3-legged token
+- AccDataConnectorApi
+  - Requires the `data:read` and `data:write` scopes
   - Requires a 3-legged token
 
 ## License
