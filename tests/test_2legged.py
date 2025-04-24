@@ -140,7 +140,7 @@ users = [
         "products": AccProjectUsersApi.productadmin,
     }
 ]
-retval = acc.project_users.import_users(test_project_id, users)
+retval = acc.project_users.post_import_users(test_project_id, users)
 assert retval == True
 
 
@@ -161,7 +161,10 @@ test_user = acc.project_users.get_user_by_email(
 assert test_user == None
 
 # %% add users to a project test
-user = acc.project_users.add_user(project_id=test_project_id, user_email=test_email)
+user = acc.project_users.post_user(
+    project_id=test_project_id,
+    user={"email": test_email, "products": AccProjectUsersApi.productmember},
+)
 assert user["email"] == test_email
 
 

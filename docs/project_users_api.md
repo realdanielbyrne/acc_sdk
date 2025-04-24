@@ -36,7 +36,7 @@ new_user = {
     "email": "user@example.com",
     "products": AccProjectUsersApi.productmember
 }
-created_user = acc.project_users.add_user(project_id="your_project_uuid", user=new_user)
+created_user = acc.project_users.post_user(project_id="your_project_uuid", user=new_user)
 print(created_user)
 ```
 
@@ -50,7 +50,7 @@ bulk_users = [
     {"email": "user2@example.com", "products": AccProjectUsersApi.productadmin}
 ]
 
-acc.project_users.import_users(project_id="your_project_uuid", users=bulk_users)
+acc.project_users.post_import_users(project_id="your_project_uuid", users=bulk_users)
 ```
 
 ## Update User Permissions
@@ -59,7 +59,7 @@ Update permissions or product access for a specific user.
 
 ```python
 update_data = {"products": AccProjectUsersApi.productadmin}
-updated_user = acc.project_users.patch(project_id="your_project_uuid", target_user_id="user_uuid", data=update_data)
+updated_user = acc.project_users.patch_user(project_id="your_project_uuid", target_user_id="user_uuid", data=update_data)
 print(updated_user)
 ```
 
@@ -82,7 +82,7 @@ acc.project_users.patch_project_users(projects=projects, users=users)
 Remove an individual user from a specific project.
 
 ```python
-acc.project_users.delete(project_id="your_project_uuid", target_user_id="user_uuid")
+acc.project_users.delete_user(project_id="your_project_uuid", target_user_id="user_uuid")
 ```
 
 ## Bulk Delete Users from a Project

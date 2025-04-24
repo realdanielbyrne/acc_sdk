@@ -7,7 +7,7 @@ import time
 class AccProjectUsersApi:
     """
     This class provides methods to interact with the project users endpoint of the Autodesk Construction Cloud API.
-    The class provides methods to get, add, update, and delete users in a project as well as bulk implementations of these methods.
+    The class provides methods to get, post, patch, and delete users in a project as well as bulk implementations of these methods.
 
     Token must be Bearer <token>, where <token> is obtained via either two-legged or three-legged oauth flow.
     The GET methods require account:read and the POST, PATCH, and DELETE methods require account:write scopes.
@@ -27,7 +27,7 @@ class AccProjectUsersApi:
             "email": "user@example.com",
             "products": AccProjectUsersApi.productmember
         }
-        created_user = acc.project_users.add_user(project_id="your_project_uuid", user=new_user)
+        created_user = acc.project_users.post_user(project_id="your_project_uuid", user=new_user)
         ```
     """
 
@@ -57,6 +57,88 @@ class AccProjectUsersApi:
         self.base_url = "https://developer.api.autodesk.com/construction/admin"
         self.base = base
         self.user_id = self.base.user_info.get("uid")
+
+    def _get_headers(self, include_content_type=False):
+        """
+        Constructs the headers required for API requests.
+
+        Args:
+            include_content_type (bool, optional): Whether to include Content-Type header. Defaults to False.
+
+        Returns:
+            dict: A dictionary containing the headers.
+        """
+        token = f"Bearer {self.base.get_private_token()}"
+        headers = {"Authorization": token}
+
+        if self.user_id:
+            headers["User-Id"] = self.user_id
+
+        if include_content_type:
+            headers["Content-Type"] = "application/json"
+
+        return headers
+
+    def _handle_pagination(self, url, headers, params=None, follow_pagination=False):
+        """
+        Handles pagination for API requests.
+
+        Args:
+            url (str): The initial URL for the API request.
+            headers (dict): The headers for the API request.
+            params (dict, optional): Query parameters for the API request.
+            follow_pagination (bool, optional): Whether to follow pagination links.
+
+        Returns:
+            list: A list of results from all pages.
+        """
+        all_results = []
+        next_url = url
+
+        while next_url:
+            response = requests.get(next_url, headers=headers, params=params)
+            self._handle_error_response(response)
+
+            data = response.json()
+            all_results.extend(data.get("results", []))
+
+            # Get the next URL for pagination
+            next_url = (
+                data.get("pagination", {}).get("nextUrl") if follow_pagination else None
+            )
+
+            # Clear params for subsequent requests using the pagination URL
+            params = None
+
+        # Add uid field for each user
+        for user in all_results:
+            user["sub"] = user["uid"] = user["autodeskId"]
+
+        return all_results
+
+    def _handle_error_response(self, response):
+        """
+        Handles error responses from API calls.
+
+        Args:
+            response (requests.Response): The response object from the API call.
+
+        Raises:
+            Exception: If the response contains an error.
+        """
+        if response.status_code >= 400:
+            try:
+                error_json = response.json()
+                errors = error_json.get("errors") or error_json.get("detail")
+                if errors:
+                    if isinstance(errors, list):
+                        for error in errors:
+                            print(f"API Error: {error}")
+                    else:
+                        print(f"API Error: {errors}")
+            except:
+                pass
+            response.raise_for_status()
 
     def get_users(self, project_id: str, query_params=None, follow_pagination=False):
         """
@@ -108,12 +190,8 @@ class AccProjectUsersApi:
             )
             ```
         """
-        token = f"Bearer {self.base.get_private_token()}"
-
-        base_url = f"{self.base_url}/v1/projects/{project_id}/users"
-        headers = {"Authorization": token, "User-Id": self.user_id}
-        all_users = []
-        next_url = base_url
+        url = f"{self.base_url}/v1/projects/{project_id}/users"
+        headers = self._get_headers()
 
         if query_params is None:
             query_params = {}
@@ -124,24 +202,9 @@ class AccProjectUsersApi:
         if query_params.get("offset") is None:
             query_params["offset"] = 0
 
-        while next_url:
-            response = requests.get(next_url, headers=headers, params=query_params)
-            if response.status_code != 200:
-                response.raise_for_status()
-
-            data = response.json()
-            all_users.extend(data["results"])
-
-            next_url = data["pagination"].get("nextUrl") if follow_pagination else None
-
-            # Clear query parameters for subsequent requests using the pagination URL
-            query_params = None
-
-        # foreach user in all_users, add user['uid'] = user['autodeskId']
-        for user in all_users:
-            user["sub"] = user["uid"] = user["autodeskId"]
-
-        return all_users
+        return self._handle_pagination(
+            url, headers, params=query_params, follow_pagination=follow_pagination
+        )
 
     def get_user(self, project_id: str, user_id: str, fields: list[str] = []) -> dict:
         """
@@ -173,19 +236,16 @@ class AccProjectUsersApi:
             )
             ```
         """
-        token = f"Bearer {self.base.get_private_token()}"
-
         url = f"{self.base_url}/v1/projects/{project_id}/users/{user_id}"
-        headers = {"Authorization": token}
+        headers = self._get_headers()
         query_params = {"fields": fields}
-        response = requests.get(url, headers=headers, params=query_params)
 
-        if response.status_code == 200:
-            user = response.json()
-            user["sub"] = user["uid"] = user["autodeskId"]
-            return user
-        else:
-            response.raise_for_status()
+        response = requests.get(url, headers=headers, params=query_params)
+        self._handle_error_response(response)
+
+        user = response.json()
+        user["sub"] = user["uid"] = user["autodeskId"]
+        return user
 
     def get_user_by_email(self, project_id: str, email: str) -> dict:
         """
@@ -212,7 +272,7 @@ class AccProjectUsersApi:
         )
         return users[0] if users else None
 
-    def add_user(self, project_id: str, user: dict) -> dict:
+    def post_user(self, project_id: str, user: dict) -> dict:
         """
         Adds a user to a project.
 
@@ -232,7 +292,7 @@ class AccProjectUsersApi:
                 "email": "user@example.com",
                 "products": AccProjectUsersApi.productmember
             }
-            created_user = acc.project_users.add_user(
+            created_user = acc.project_users.post_user(
                 project_id="your_project_uuid",
                 user=new_user
             )
@@ -242,19 +302,14 @@ class AccProjectUsersApi:
                 "email": "admin@example.com",
                 "products": AccProjectUsersApi.productadmin
             }
-            created_admin = acc.project_users.add_user(
+            created_admin = acc.project_users.post_user(
                 project_id="your_project_uuid",
                 user=admin_user
             )
             ```
         """
         url = f"{self.base_url}/v1/projects/{project_id}/users"
-
-        headers = {
-            "Authorization": f"Bearer {self.base.get_private_token()}",
-            "Content-Type": "application/json",
-            "User-Id": self.user_id,
-        }
+        headers = self._get_headers(include_content_type=True)
 
         if user.get("email") is None:
             raise ValueError("Email is required")
@@ -266,11 +321,11 @@ class AccProjectUsersApi:
             modified_user["roleIds"] = user.get("roleIds")
 
         response = requests.post(url, headers=headers, json=modified_user, timeout=100)
-        response.raise_for_status()
+        self._handle_error_response(response)
 
         return response.json()
 
-    def import_users(self, project_id: str, users: list[dict]) -> bool:
+    def post_import_users(self, project_id: str, users: list[dict]) -> bool:
         """
         Imports a list of users into a project.
 
@@ -281,7 +336,7 @@ class AccProjectUsersApi:
             users (list[dict]): A list of user dictionaries, each containing email and products keys.
 
         Returns:
-            None
+            bool: True if the import was successful
 
         Example:
             ```python
@@ -296,25 +351,18 @@ class AccProjectUsersApi:
                     "products": AccProjectUsersApi.productadmin
                 }
             ]
-            acc.project_users.import_users(
+            acc.project_users.post_import_users(
                 project_id="your_project_uuid",
                 users=users_to_import
             )
             ```
         """
-        token = f"Bearer {self.base.get_private_token()}"
-
         url = f"{self.base_url}/v2/projects/{project_id}/users:import"
-
-        headers = {
-            "Authorization": token,
-            "Content-Type": "application/json",
-            "User-Id": self.user_id,
-        }
+        headers = self._get_headers(include_content_type=True)
 
         if len(users) == 0:
             print("No users to import")
-            return
+            return True
 
         # Modify users list to retain only specified fields and add roleIds
         modified_users = []
@@ -335,11 +383,11 @@ class AccProjectUsersApi:
             if response.status_code == 202:
                 print(f"Chunk {i//200 + 1} imported successfully")
             else:
-                response.raise_for_status()
+                self._handle_error_response(response)
 
         return True
 
-    def patch(self, project_id: str, target_user_id: str, data: dict):
+    def patch_user(self, project_id: str, target_user_id: str, data: dict):
         """
         Updates a user's information in a project.
 
@@ -360,27 +408,20 @@ class AccProjectUsersApi:
             update_data = {
                 "products": AccProjectUsersApi.productadmin
             }
-            updated_user = acc.project_users.patch(
+            updated_user = acc.project_users.patch_user(
                 project_id="your_project_uuid",
                 target_user_id="user_uuid",
                 data=update_data
             )
             ```
         """
-        token = f"Bearer {self.base.get_private_token()}"
-
         url = f"{self.base_url}/v1/projects/{project_id}/users/{target_user_id}"
+        headers = self._get_headers(include_content_type=True)
 
-        headers = {
-            "Authorization": token,
-            "Content-Type": "application/json",
-            "User-Id": self.user_id,
-        }
         response = requests.patch(url, headers=headers, json=data)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            response.raise_for_status()
+        self._handle_error_response(response)
+
+        return response.json()
 
     def patch_project_users(
         self, projects: list[dict], users: list[dict], products: list[dict] = None
@@ -455,16 +496,20 @@ class AccProjectUsersApi:
                             f"patching user {email} to project {project.get('jobNumber', 'unknown')}"
                         )
                         try:
-                            self.patch(project_id, pu.get("id"), {"products": products})
+                            self.patch_user(
+                                project_id, pu.get("id"), {"products": products}
+                            )
                         except Exception:
                             time.sleep(60)
-                            self.patch(project_id, pu.get("id"), {"products": products})
+                            self.patch_user(
+                                project_id, pu.get("id"), {"products": products}
+                            )
                     else:
                         print(
                             f"user {email} already patched to project {project.get('jobNumber', 'unknown')}"
                         )
 
-    def delete(self, project_id: str, target_user_id: str):
+    def delete_user(self, project_id: str, target_user_id: str):
         """
         Deletes a user from a project.
 
@@ -475,28 +520,24 @@ class AccProjectUsersApi:
             target_user_id (str): The ID of the user to delete
 
         Returns:
-            None
+            bool: True if the deletion was successful
 
         Example:
             ```python
             # Delete a single user from a project
-            acc.project_users.delete(
+            acc.project_users.delete_user(
                 project_id="your_project_uuid",
                 target_user_id="user_uuid"
             )
             ```
         """
-        token = f"Bearer {self.base.get_private_token()}"
-
         url = f"{self.base_url}/v1/projects/{project_id}/users/{target_user_id}"
-
-        headers = {"Authorization": token, "User-Id": self.user_id}
+        headers = self._get_headers()
 
         response = requests.delete(url, headers=headers)
-        if response.status_code == 204:
-            return True
-        else:
-            response.raise_for_status()
+        self._handle_error_response(response)
+
+        return True
 
     def delete_users(self, project_id: str, users: list[dict]):
         """
@@ -531,7 +572,7 @@ class AccProjectUsersApi:
         for user in users_to_delete:
             print(f"Deleting user {user.get('email')} from project {project_id}")
             try:
-                self.delete(project_id, user.get("id"))
+                self.delete_user(project_id, user.get("id"))
             except:
                 time.sleep(60)
-                self.delete(project_id, user.get("id"))
+                self.delete_user(project_id, user.get("id"))
