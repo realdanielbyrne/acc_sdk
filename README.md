@@ -118,10 +118,13 @@ The initialization of the `Authentication` class requires the following paramete
 
 The following code snippet shows how to authenticate with the ACC API using the 2 legged client credential flow.
 
+See [tests/test_2legged.py](tests/test_2legged.py) for a full example.
+
+
 ```python
 import os
-from accapi import Authentication # Authentication Module for managing the authentication process and tokens
-from accapi import Acc
+from acc_sdk import Authentication # Authentication Module for managing the authentication process and tokens
+from acc_sdk import Acc
 
 from dotenv import load_dotenv # for optionally loading environment variables from .env file
 load_dotenv()
@@ -147,8 +150,15 @@ scopes = [
             ]
 
 # Optionaly query the OpenID Connect Discovery Document to get the API's supported scopes
-scopes = auth_client.get_oidc_spec()
-scopes = [scope for scope in scopes if scope.startswith("data") or scope.startswith("account") or scope.startswith("user-profile")]
+spec = auth_client.get_oidc_spec()
+scopes_supported = spec["scopes_supported"]
+scopes = [
+    scope
+    for scope in scopes_supported
+    if scope.startswith("data")
+    or scope.startswith("account")
+    or scope.startswith("user-profile")
+]
 
 # Request the 2 legged token
 auth_client.request_2legged_token(scopes=scopes)
@@ -157,15 +167,21 @@ assert auth_client._session["accapi_2legged"]
 
 The following code snippet shows a simplified example on how to authenticate using the 3 legged authorization code flow.
 
+See [tests/test_3legged.py](tests/test_3legged.py) for a full example.
+
 ```python
 import os
-from flask import Flask, request, render_template, redirect, url_for, session, jsonify
-from accapi import Authentication, Acc
+from flask import Flask, request, render_template, redirect, url_for, session
+from acc_sdk import Authentication, Acc
 from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SESSION_KEY")
+app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_FILE_DIR"] = ".flask_session"
+Session(app)
+
 CLIENT_ID = os.environ.get("AUTODESK_CLIENT_ID_WEB_APP")
 CLIENT_SECRET = os.environ.get("AUTODESK_CLIENT_SECRET_WEB_APP")
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL")
@@ -185,7 +201,13 @@ def login():
     """
     email = request.form.get("email")
     session["user_email"] = email
-    auth = Authentication(client_id=CLIENT_ID,client_secret=CLIENT_SECRET, session["user_email"], CALLBACK_URL)
+    auth = Authentication(
+        session=session,
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
+        admin_email=session["user_email"],
+        callback_url=CALLBACK_URL,
+    )
 
     authorization_url = auth.get_authorization_url(scopes=SCOPES)
     return redirect(authorization_url)
@@ -201,7 +223,13 @@ def callback():
         return "No authorization code received.", 400
 
     # Rebuild the Authentication object from the session to retain the same user context
-    auth = Authentication(session,CLIENT_ID,CLIENT_SECRET, session["user_email"], CALLBACK_URL)
+    auth = Authentication(
+        session=session,
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
+        callback_url=CALLBACK_URL,
+        admin_email=session["user_email"],
+    )
 
     # Exchange the code for an access token
     token_data = auth.request_authcode_access_token(code=code, scopes=SCOPES)
@@ -217,9 +245,24 @@ def dashboard():
     # Rebuild the Authentication object from the session to retain the same user context
     auth = Authentication(session,CLIENT_ID,CLIENT_SECRET, session["user_email"], CALLBACK_URL)
 
-    # Build an ACC instance (accapi) with the user's authentication context
-    acc = Acc(auth_client=auth, account_id=ACCOUNT_ID)
-    return render_template("dashboard.html")
+    # Build an ACC instance (acc_sdk) with the user's authentication context
+    auth = Authentication(
+        session=session,
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
+        admin_email=session["user_email"],
+        callback_url=CALLBACK_URL,
+    )
+    # Retrieve user’s projects
+    active_build_projects_params = {
+        "fields": "name,jobNumber,type",
+        "filterTextMatch": "equals",
+    }
+    projects = acc.projects.get_all_active_projects(
+        filter_params=active_build_projects_params
+    )
+
+    return render_template("dashboard.html", projects=projects)
 
 def run():
     app.run(debug=True)
@@ -234,7 +277,7 @@ if __name__ == "__main__":
 Once you have authenticated with the ACC API, you can create an instance of the `ACC` class. The `ACC` class provides access to the various services provided by the ACC API. The account id is an optional argument. If you do not provide the account id, the class will attempt to get the Account Id from the 2-legged token.  Not providing the account id will not limit the services you can access if you have both the 2-legged and 3-legged tokens and the appropriate scopes.
 
 ```python
-from accapi import Acc
+from acc_sdk import Acc
 acc = Acc(auth_client=auth_client, account_id=ACCOUNT_ID)
 ```
 
