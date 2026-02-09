@@ -45,5 +45,10 @@ ipykernel = "^6.29.5"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+]
+
 [tool.poetry.scripts]
 dashboard = "tests.test_3legged:run"
