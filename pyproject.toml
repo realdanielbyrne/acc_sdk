@@ -6,7 +6,7 @@ authors = [{name="Daniel Byrne", email= "realdanielbyrne@icloud.com"}]
 maintainers = [{name="Daniel Byrne", email= "realdanielbyrne@icloud.com"}]
 readme = "README.md"
 requires-python = ">= 3.12"
-version = "0.5.12"
+version = "0.5.13"
 dependencies = [
     "requests>=2.32.4",
     "urllib3>=2.6.3",

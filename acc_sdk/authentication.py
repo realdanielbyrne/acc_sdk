@@ -745,9 +745,9 @@ class Authentication:
                 
         data = {
             "grant_type": GrantType.Refresh.value,
-            "refresh_token": self._session.get("token_name").refresh_token,
+            "refresh_token": self._session.get(token_name, {}).get("refresh_token"),
             "client_id": self.client_id,
-            "client_secret": self.client_secret,        
+            "client_secret": self.client_secret,
         }
 
         if scopes:
@@ -812,8 +812,8 @@ class Authentication:
                 
         data = {
             "grant_type":    GrantType.Refresh.value,
-            "refresh_token": self._session.get("token_name").refresh_token,
-            "client_id": self.client_id            
+            "refresh_token": self._session.get(token_name, {}).get("refresh_token"),
+            "client_id": self.client_id
         }
 
         if scopes:
