@@ -36,7 +36,9 @@ poetry run ruff check acc_sdk tests
 - Both are exported from `__init__.py`.
 
 ### Base Class Pattern
-`AccBase` (in `base.py`) holds shared state: `auth_client`, `account_id`, `hub_id`, `company_id`, `user_info`. Every API class receives an `AccBase` instance via its constructor and accesses tokens/IDs through it.
+`AccBase` (in `base.py`) is a **shared state container** (not a parent class for inheritance). It holds: `auth_client`, `account_id`, `hub_id`, `company_id`, `user_info`, `admin_email`. Every API class receives an `AccBase` instance via its constructor and accesses tokens/IDs through it.
+
+Key token method: `get_private_token()` returns whichever token is available, preferring 2-legged over 3-legged.
 
 ### API Class Pattern
 Each API module (`projects.py`, `forms.py`, `sheets.py`, etc.) defines a class named `Acc[Module]Api` that follows this structure:
@@ -45,6 +47,13 @@ Each API module (`projects.py`, `forms.py`, `sheets.py`, etc.) defines a class n
 - `_handle_pagination(url, headers, params)` — follows `pagination.nextUrl` or `links.next.href` across pages
 - `_handle_error_response(response)` — calls `raise_for_status()` with error detail printing
 - Public methods named `get_*`, `create_*`, `update_*`, `delete_*` wrapping specific API endpoints
+- Pagination is opt-in: many methods accept `follow_pagination=False` parameter
+
+### Aggregator Service Attributes
+The `Acc` class exposes API services as attributes:
+- `acc.projects`, `acc.project_users`, `acc.account_users`
+- `acc.sheets`, `acc.forms`, `acc.data_management`, `acc.data_connector`
+- `acc.companies`, `acc.business_units`, `acc.user_profiles`
 
 ### Token Types and Scopes
 - **2-legged** (client credentials): server-to-server, stored as `accapi_2legged` in session. Used for account admin operations (account_users, business_units, companies).
@@ -52,15 +61,16 @@ Each API module (`projects.py`, `forms.py`, `sheets.py`, etc.) defines a class n
 - Some modules (projects, project_users, data_management) support both token types.
 
 ### Aggregator Convenience Methods
-`Acc` class provides higher-level methods like `get_forms()`, `get_forms_for_past30()`, `get_forms_all_active_projects()` that combine calls from multiple API services.
+`Acc` class provides higher-level methods like `get_forms()`, `get_forms_for_past30()`, `get_forms_all_active_projects()` that combine calls from multiple API services (e.g., enriching forms data with user names from project_users).
 
 ## Testing Conventions
 
 Tests use `unittest.TestCase` with `unittest.mock`. Each test file:
 1. Creates a `MagicMock(spec=AccBase)` in `setUp`
 2. Instantiates the API class with the mock base
-3. Uses `@patch("requests.get")` / `@patch("requests.post")` etc. to mock HTTP calls
+3. Uses `@patch` to mock HTTP calls — newer tests use module-scoped paths like `@patch("acc_sdk.forms.requests.get")`, some older tests use `@patch("requests.get")`
 4. Asserts on return values and that requests were called with correct URLs/headers/params
+5. Tests pagination by using `side_effect` with multiple mock responses
 
 ## Code Style
 
