@@ -6,7 +6,12 @@ authors = [{name="Daniel Byrne", email= "realdanielbyrne@icloud.com"}]
 maintainers = [{name="Daniel Byrne", email= "realdanielbyrne@icloud.com"}]
 readme = "README.md"
 requires-python = ">= 3.12"
-version = "0.5.10"
+version = "0.5.11"
+dependencies = [
+    "requests>=2.32.3",
+    "python-dotenv>=1.0.1",
+    "flask>=3.1.0",
+]
 
 [tool.setuptools.package-data]
 "acc_sdk" = ["docs/*.md"]
