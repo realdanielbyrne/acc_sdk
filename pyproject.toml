@@ -6,9 +6,10 @@ authors = [{name="Daniel Byrne", email= "realdanielbyrne@icloud.com"}]
 maintainers = [{name="Daniel Byrne", email= "realdanielbyrne@icloud.com"}]
 readme = "README.md"
 requires-python = ">= 3.12"
-version = "0.5.11"
+version = "0.5.12"
 dependencies = [
-    "requests>=2.32.3",
+    "requests>=2.32.4",
+    "urllib3>=2.6.3",
     "python-dotenv>=1.0.1",
     "flask>=3.1.0",
 ]
@@ -26,7 +27,8 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.12"
-requests = "^2.32.3"
+requests = "^2.32.4"
+urllib3 = "^2.6.3"
 flask = "^3.1.0"
 argparse = "^1.4.0"
 ipython = "^9.0.1"
